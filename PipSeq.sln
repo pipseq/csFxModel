@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fxModelDemo", "fxModel\fxModelDemo.csproj", "{F89258D8-4D02-464F-93C3-0FEF094CDC92}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "macdPyApp", "macdPyApp\macdPyApp.pyproj", "{E01C8251-C519-4621-96AB-9D9EED360152}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fxCoreLinkTests", "fxCoreLinkTests\fxCoreLinkTests.csproj", "{C247CA9C-A52F-4A16-9704-36D999E4B18E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{647F33A5-21C9-4942-9C8E-1357E62727A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fxCoreLink", "fxCoreLink\fxCoreLink.csproj", "{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F89258D8-4D02-464F-93C3-0FEF094CDC92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F89258D8-4D02-464F-93C3-0FEF094CDC92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F89258D8-4D02-464F-93C3-0FEF094CDC92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F89258D8-4D02-464F-93C3-0FEF094CDC92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E01C8251-C519-4621-96AB-9D9EED360152}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E01C8251-C519-4621-96AB-9D9EED360152}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C247CA9C-A52F-4A16-9704-36D999E4B18E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C247CA9C-A52F-4A16-9704-36D999E4B18E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C247CA9C-A52F-4A16-9704-36D999E4B18E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C247CA9C-A52F-4A16-9704-36D999E4B18E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{647F33A5-21C9-4942-9C8E-1357E62727A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{647F33A5-21C9-4942-9C8E-1357E62727A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{647F33A5-21C9-4942-9C8E-1357E62727A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{647F33A5-21C9-4942-9C8E-1357E62727A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
