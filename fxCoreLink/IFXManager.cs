@@ -20,10 +20,11 @@ namespace fxCoreLink
         DeleteOrders getDeleteOrders();
         ELSTrade getElsTrade();
         HistoricPrices getHistoricPrices();
-        MarketTrade getMarketTrade();
+        IMarketTrade getMarketTrade();
         OCOTrade getOcoTrade();
         void getSession();
         Dictionary<string, Dictionary<string, string>> getTable(string sTable);
+        Dictionary<string, string> getOfferForPair(string pair);
         bool hasMargin();
         bool hasMargin(double pct);
         List<O2GOrderRow> loadOrders();

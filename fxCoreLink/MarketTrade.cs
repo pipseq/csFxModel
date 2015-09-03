@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace fxCoreLink
 {
-    public class MarketTrade
+    public class MarketTrade : IMarketTrade
     {
         Logger log = Logger.LogManager("MarketTrade");
         private O2GSession mSession;
@@ -22,12 +22,14 @@ namespace fxCoreLink
         double mAsk = 0.0;
         double mPointSize = 0.0;
         int trailStepStop = 1;  // dynamic
+        string cond_dist = "n/a";
 
-		public MarketTrade(O2GSession session,Display display,MailSender mailSender)
+		public MarketTrade(O2GSession session,Display display,MailSender mailSender, string cond_dist)
         {
             this.mSession = session;
             this.display = display;
             this.mailSender = mailSender;
+            this.cond_dist = cond_dist;
         }
         private Display display;
 
@@ -70,8 +72,8 @@ namespace fxCoreLink
                         // # of pips in notation of instrument (i.e. 0.005 for 5 pips on USD/JPY)
                         valueMap.setInt(O2GRequestParamsEnum.TrailStepStop, trailStepStop);
                         //valueMap.setDouble(O2GRequestParamsEnum.TrailStep, 0.1);
-                        log.debug(string.Format("Market order request, {0} {1}, stop={2}, limPips={3}, expPrice={4}, customId={5}",
-                            mInstrument,mBuySell,pegStopOffset, limitPips, expectedPrice, customId));
+                        log.debug(string.Format("Market order request, {0} {1}, stop={2}, limPips={3}, expPrice={4}, customId={5}, cond_dist={6}",
+                            mInstrument,mBuySell,pegStopOffset, limitPips, expectedPrice, customId, cond_dist));
                         O2GRequest request = requestFactory.createOrderRequest(valueMap);
                         CtrlTimer.getInstance().startTimer("MarketRequest");
                         mSession.sendRequest(request);

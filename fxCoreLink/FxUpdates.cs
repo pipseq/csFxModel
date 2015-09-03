@@ -176,10 +176,10 @@ namespace fxCoreLink
                 if (list.Count > 0) //lock(list)
                 {
                     Dictionary<string, object> dataMap = list[0];
-                    list.RemoveAt(0);
                     //Console.WriteLine("" + pair + "=" + dataMap["BID"] + " @ " + dataMap["DateTime"]);
                     //long ticks = DateTime.Now.Ticks;
                     accumMgr.add(pair, (DateTime)dataMap["DateTime"], (double)dataMap["BID"], (double)dataMap["ASK"]);
+                    list.RemoveAt(0);
                     //ticks = DateTime.Now.Ticks - ticks;
 
                     // stats
@@ -638,12 +638,18 @@ namespace fxCoreLink
         Thread openThread;
         public void enterPosition(string pair, string buySell, double last, int stopPips, int amount, string customId)
         {
+            enterPosition(pair, buySell, last, stopPips, 0, amount, customId);
+        }
+
+        public void enterPosition(string pair, string buySell, double last, int stopPips, int limitPips, int amount, string customId)
+        {
 
             Dictionary<string, string> map = new Dictionary<string, string>();
             map.Add("Pair", pair);
             map.Add("BuySell", buySell);
             map.Add("Last", "" + last);
             map.Add("StopPips", "" + stopPips);
+            map.Add("LimitPips", "" + limitPips);
             map.Add("Amount", "" + amount);
             map.Add("CustomId", customId);
             lock (openQueue)   // potential race across pair-threads
@@ -681,22 +687,24 @@ namespace fxCoreLink
                         int stopPips = int.Parse(sStopPips);
                         string sAmount = map["Amount"];
                         int amount = int.Parse(sAmount);
-                        int LimitPips = 0;
+                        string sLimitPips = map["LimitPips"];
+                        int limitPips = int.Parse(sLimitPips);
                         string sLast = map["Last"];
                         double last = double.Parse(sLast);    // does this make sense to return?
                         string buySell = map["BuySell"];
                         string sBuySell = "";
-                        if (buySell.Equals("BUY"))
+                        if (buySell.ToUpper().Equals("BUY"))
                             sBuySell = "B";
-                        else
+                        else if (buySell.ToUpper().Equals("SELL"))
                             sBuySell = "S";
+                        else continue;
 
                         if (Control.ordersArmed())
                         {
-                            string offerId = FxManager.getMarketTrade()
+                            string offerId = FxManager.getMarketTrade() // TODO - manage offerId returned
                                 .trade(pair, amount, sBuySell,
                                 stopPips,
-                                LimitPips,
+                                limitPips,
                                 last,
                                 customId);
                             FxManager.closeMarketTrade();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Xml;
+using System.Text.RegularExpressions;
+using System.Configuration;
 
 namespace Common
 {
@@ -15,8 +17,25 @@ namespace Common
         private static readonly char[] ListMapDelimiters = new char[] { '=', ':' };
 
         private static Property instance;
+
+        private string projectFolder = ConfigurationManager.AppSettings["projectFolder"];
+        private string configFolder = ConfigurationManager.AppSettings["configFolder"];
+        private string propFile = ConfigurationManager.AppSettings["propsFname"];
+
         private Property()
         {
+            loadProperties(propFile);
+        }
+        public Property(Type type):this(type.Name)
+        {
+            //this(type.Name);
+            //string fn = string.Format(@"{0}{1}", tn, propFile);
+            //loadProperties(fn);
+        }
+        public Property(string tn)
+        {
+            string fn = string.Format(@"{0}{1}", tn, propFile);
+            loadProperties(fn);
         }
         public static Property getInstance()
         {
@@ -50,16 +69,27 @@ namespace Common
         }
         public string getProperty(string key)
         {
-            if (properties.ContainsKey(key))
-                return properties[key];
-            return "";
+            return getProperty(key,"");
         }
-
+        private static string pattern = @"\$\{[A-Za-z][A-Za-z0-9]+\}";
         public string getProperty(string key, string dflt)
         {
+            string result = dflt;
             if (properties.ContainsKey(key))
-                return properties[key];
-            return dflt;
+            {
+                result = properties[key];
+                for (Match match = Regex.Match(result, pattern);match.Success; match = Regex.Match(result, pattern))
+                {
+                    string mOriginal = match.Value;
+                    string m = mOriginal.Replace("$", "");
+                    m = m.Replace("{", "");
+                    m = m.Replace("}", "");
+                    string r = ConfigurationManager.AppSettings[m];
+                    if (r == null) r = "";
+                    result = result.Replace(mOriginal, r);
+                }
+            }
+            return result;
         }
 
         public int getIntProperty(string key)
@@ -165,8 +195,7 @@ namespace Common
             XmlDocument pdoc = new XmlDocument();
             try
             {
-                pdoc.Load(pfilename);
-
+                pdoc.Load(projectFolder + @"\" + configFolder + @"\" + pfilename);
             }
             catch (FileNotFoundException e)
             {

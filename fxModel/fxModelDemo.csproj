@@ -176,6 +176,10 @@
       <Project>{647f33a5-21c9-4942-9c8e-1357e62727a0}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\csExperts\csExperts.csproj">
+      <Project>{2b27e618-cda5-40d4-ab6d-ea2f09745303}</Project>
+      <Name>csExperts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\fxCoreLink\fxCoreLink.csproj">
       <Project>{7639f97d-2abd-4730-ba65-8f63eef71ca9}</Project>
       <Name>fxCoreLink</Name>

@@ -30,7 +30,13 @@ namespace Common
             fname = ConfigurationManager.AppSettings["logFname"];
             if (fname == null)
             {
-                fname = "default.log";
+                    fname = "default.log";
+            }
+            string projectFolder = ConfigurationManager.AppSettings["projectFolder"];
+            string logFolder = ConfigurationManager.AppSettings["logFolder"];
+            if (projectFolder != null)
+            {
+                fname = projectFolder + @"\" + logFolder + @"\" + fname;
             }
         }
 

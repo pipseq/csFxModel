@@ -27,6 +27,7 @@ namespace fxCoreLink
         private int sessionNestCounter = 0;
         private MailSender mailSender;
         private string accountID;
+        private IDictionary<string, string> systemProperties = new Dictionary<string, string>();
 
         public string AccountID
         {
@@ -34,6 +35,18 @@ namespace fxCoreLink
             set { accountID = value; }
         }
 
+        public IDictionary<string, string> SystemProperties
+        {
+            get
+            {
+                return systemProperties;
+            }
+
+            set
+            {
+                systemProperties = value;
+            }
+        }
 
         static FXManager()
         {
@@ -65,6 +78,7 @@ namespace fxCoreLink
         {
             getSession();
             GetAccount(Session);
+            getSystemProperties(Session);
             closeSession();
         }
 
@@ -98,6 +112,21 @@ namespace fxCoreLink
                 log.debug("Exception in GetAccounts():\n\t " + e.Message);
             }
         }
+
+        // Get system properties
+        private void getSystemProperties(O2GSession session)
+        {
+            O2GLoginRules loginRules = session.getLoginRules();
+            O2GResponse response = loginRules.getSystemPropertiesResponse();
+            O2GResponseReaderFactory factory = session.getResponseReaderFactory();
+            if (factory == null)
+                return;
+            O2GSystemPropertiesReader systemResponseReader = factory.createSystemPropertiesReader(response);
+            if (systemResponseReader == null)
+                return;
+            SystemProperties = systemResponseReader.Properties;
+        }
+
         public void getSession()
         {
             if (sessionNestCounter++ > 0)
@@ -106,7 +135,7 @@ namespace fxCoreLink
             //Create a session:
             session = O2GTransport.createSession();
             // NOTE: API change requires SessionStatusListener or null
-            session.useTableManager(O2GTableManagerMode.Yes,null);
+            session.useTableManager(O2GTableManagerMode.Yes, null);
             //Create an object of a status listener class: 
             statusListener = new SessionStatusListener(display);
             //Subscribe the status listener object to the session status. It is important to subscribe before the login:
@@ -117,7 +146,7 @@ namespace fxCoreLink
             statusListener.manualEvent.WaitOne();
 
             int maxTries = 3;
-            for (int i=0; i< maxTries && !statusListener.Connected; i++)
+            for (int i = 0; i < maxTries && !statusListener.Connected; i++)
             {
                 Thread.Sleep(100);
             }
@@ -184,11 +213,12 @@ namespace fxCoreLink
             closeSession();
         }
 
-        public MarketTrade getMarketTrade()
+        public IMarketTrade getMarketTrade()
         {
             getSession();
+            string cond_dist = SystemProperties["COND_DIST"];
             if (marketTrade == null)
-                marketTrade = new MarketTrade(session, display, mailSender);
+                marketTrade = new MarketTrade(session, display, mailSender, cond_dist);
             return marketTrade;
         }
 
@@ -348,6 +378,24 @@ namespace fxCoreLink
             }
             return curMap;
         }
+
+        public Dictionary<string, string> getOfferForPair(string pair)
+        {
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            Dictionary<string, Dictionary<string, string>> curMap = new Dictionary<string, Dictionary<string, string>>();
+
+            curMap = loadMap("OFFERS");
+            foreach (string key in curMap.Keys)
+            {
+                if (pair == curMap[key]["Instrument"])
+                {
+                    map = curMap[key];
+                    break;
+                }
+            }
+            return map;
+        }
+
         public List<O2GTradeRow> loadTrades()
         {
             List<O2GTradeRow> lTrades = new List<O2GTradeRow>();
@@ -453,7 +501,5 @@ namespace fxCoreLink
 
          */
 
-
     }
-
 }

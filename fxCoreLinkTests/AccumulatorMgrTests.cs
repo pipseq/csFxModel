@@ -20,7 +20,7 @@ namespace fxCoreLink.Tests
             accumulatorMgr.read();  // load history
 
             string before = accumulatorMgr.writeString();
-            accumulatorMgr.roll(0);
+            accumulatorMgr.roll(new DateTime(2000,1,1,0,0,0));
             string after = accumulatorMgr.writeString();
 
             string beforeCmp = File.ReadAllText("testdata.json");

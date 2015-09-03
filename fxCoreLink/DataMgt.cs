@@ -215,16 +215,15 @@ namespace fxCoreLink
             }
         }
 
-        public void roll(int counter)
+        public void roll(DateTime now)
         {
-            if (debug) log.debug("roll(), counter = " + counter);
             foreach (string pair in pairTimePriceMap.Keys)
             {
-                roll(pair, counter);
+                roll(pair, now);
             }
         }
 
-        public void roll(string pair,int counter)
+        public void roll(string pair, DateTime now)
         { 
             double last = Double.NaN;
             double high = Double.NaN;
@@ -251,7 +250,7 @@ namespace fxCoreLink
                 }
             }
             foreach (TimeFrame timeFrame in ExpertFactory.timeFrameMap.Keys)
-                if (PriceProcessor.isEvenIncrement(timeFrame, counter))
+                if (PriceProcessor.isEvenIncrement(timeFrame, now))
                 {
                     Accumulator accumLa = getAccum(pair, timeFrame, PriceComponent.BidClose);
                     Accumulator accumHi = getAccum(pair, timeFrame, PriceComponent.BidHigh);

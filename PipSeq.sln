@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fxCoreLink", "fxCoreLink\fxCoreLink.csproj", "{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "csExperts", "csExperts\csExperts.csproj", "{2B27E618-CDA5-40D4-AB6D-EA2F09745303}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7639F97D-2ABD-4730-BA65-8F63EEF71CA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B27E618-CDA5-40D4-AB6D-EA2F09745303}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B27E618-CDA5-40D4-AB6D-EA2F09745303}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B27E618-CDA5-40D4-AB6D-EA2F09745303}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B27E618-CDA5-40D4-AB6D-EA2F09745303}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

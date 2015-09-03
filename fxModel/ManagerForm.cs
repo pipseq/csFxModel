@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using fxCoreLink;
 using Common;
+using csExperts;
+using System.Reflection;
+using System.Configuration;
 
 namespace fxModel
 {
@@ -19,6 +22,9 @@ namespace fxModel
         private string pyfile = "macdSignal.py";
         private ExpertFactory expertFactory;
         private static Dictionary<string, List<string>> curMap = new Dictionary<string, List<string>>();
+        private Dictionary<string, RadioButton> mapTimeFrameRadio = new Dictionary<string, RadioButton>();
+        private string projectFolder = Environment.CurrentDirectory;
+
         static ManagerForm()
         {
             foreach (string k in new string[] { "AUD", "CAD", "EUR", "GBP", "JPY", "NZD", "USD" })
@@ -37,8 +43,24 @@ namespace fxModel
 
         public ManagerForm()
         {
-            Property.getInstance().loadProperties(@"..\..\..\var\config\properties.xml");
+            projectFolder = ConfigurationManager.AppSettings["projectFolder"];
+
             InitializeComponent();
+
+            mapTimeFrameRadio.Add("m1", this.radioButtonM1);
+            mapTimeFrameRadio.Add("m5", this.radioButtonM5);
+            mapTimeFrameRadio.Add("m15", this.radioButtonM15);
+            mapTimeFrameRadio.Add("m30", this.radioButtonM30);
+            mapTimeFrameRadio.Add("H1", this.radioButtonH1);
+            mapTimeFrameRadio.Add("H4", this.radioButtonH4);
+            mapTimeFrameRadio.Add("D1", this.radioButtonD1);
+
+            new ToolTip().SetToolTip(this.groupBoxPairs, "Select pairs to run strategies with experts");
+            new ToolTip().SetToolTip(this.groupBoxJournal, "Read or write a journal of price and \r\ntime period data when running experts");
+            new ToolTip().SetToolTip(this.groupBoxCs, "Select and run a C# expert");
+            new ToolTip().SetToolTip(this.groupBoxPython, "Select and run a Python expert");
+            new ToolTip().SetToolTip(this.groupBoxTimeframe, "Choose the maximum timeframe the expert is called for");
+
         }
 
         private void ManagerForm_Load(object sender, EventArgs e)
@@ -57,10 +79,20 @@ namespace fxModel
                 }
             }
 
+            List<string> selectedTimeFrames = new List<string>();
+            selectedTimeFrames.AddRange(Property.getInstance().getDelimitedListProperty("selectedTimeFrames"));
+            string defaultTimeFrame = Property.getInstance().getProperty("defaultTimeFrame","m1");
+            mapTimeFrameRadio[defaultTimeFrame].Checked = true;
+
+
+            setupCsExperts();
+
             string user = Property.getInstance().getProperty("user");
             string pw = Property.getInstance().getProperty("pw");
             string url = Property.getInstance().getProperty("url");
             string conn = Property.getInstance().getProperty("connection");
+            this.toolStripStatusLabelAccount.Text = user;
+            this.toolStripStatusLabelConnection.Text = conn;
 
             accumulatorMgr = new AccumulatorMgr();
 
@@ -79,6 +111,7 @@ namespace fxModel
                 MessageBox.Show("No connection: " + ex.Message + "; simulation mode only");
                 fxManager = new SimFXManager();
                 fxUpdates = new FxUpdates(this, this, fxManager, accumulatorMgr);
+                this.toolStripStatusLabelConnection.Text = "simulation";
             }
             catch (Exception ex)
             {
@@ -268,18 +301,19 @@ namespace fxModel
 
         private void buttonPyFileDialog_Click(object sender, EventArgs e)
         {
-            if (this.textBoxPyFile.Text.Trim() != "")
+            if (this.textBoxPyFile.Text.Trim() == "")
             {
-                this.openFileDialogPy.FileName = "*.py";// pyfile;
+                this.openFileDialogPy.FileName = "*.py";
             }
             else
             {
-                pyfile = textBoxPyFile.Text;
+                this.openFileDialogPy.FileName = textBoxPyFile.Text;
             }
+            this.openFileDialogPy.InitialDirectory = projectFolder;
             DialogResult dr = this.openFileDialogPy.ShowDialog();
             if (DialogResult.OK == dr)
             {
-                pyfile = this.openFileDialogPy.SafeFileName;
+                pyfile = this.openFileDialogPy.FileName;
                 this.textBoxPyFile.Text = pyfile;
             }
         }
@@ -302,11 +336,19 @@ namespace fxModel
                 return;
             }
 
-            runExpert(pairs);
+            string timeFrame = "m1";
+            foreach (string t in mapTimeFrameRadio.Keys)
+            {
+                if (mapTimeFrameRadio[t].Checked)
+                {
+                    timeFrame = t;
+                }
+            }
 
+            runExpert(pairs,timeFrame);
         }
 
-        private void runExpert(List<string> pairs)
+        private void runExpert(List<string> pairs,string timeFrame)
         {
             try
             {
@@ -317,8 +359,7 @@ namespace fxModel
                     accumulatorMgr.Snapshot = getProperty("journalFile", "testdata");
                     expertFactory.setJournal(
                         pairs, 
-                        getProperty("journalFile", "testdata"),
-                        this.checkBoxAppend.Checked);
+                        getProperty("journalFile", "testdata"));
                 }
                 if (isJournalRead())
                 {
@@ -328,7 +369,8 @@ namespace fxModel
 
                 foreach (string p in pairs)
                 {
-                    ExpertScript es = new ExpertScript(pyfile, p, TimeFrame.m5, true);
+                    TimeFrame tf = ExpertFactory.TimeFrameInverseMap[timeFrame];
+                    ExpertScript es = new ExpertScript(pyfile, p, tf, true);
                     expertFactory.subscribe(es);
                     expertFactory.subscribePrice(es);
                 }
@@ -350,7 +392,7 @@ namespace fxModel
             }
         }
 
-        private void buttonStopPython_Click(object sender, EventArgs e)
+        private void buttonStopExperts_Click(object sender, EventArgs e)
         {
             expertFactory.shutdown();
             runStatus(false);
@@ -359,12 +401,12 @@ namespace fxModel
         private void runStatus(bool status)
         {
             this.buttonPython.Enabled = !status;
-            this.buttonStopPython.Enabled = status;
+            this.buttonCsRun.Enabled = !status;
+            this.buttonStopExperts.Enabled = status;
         }
 
         private void radioButtonJournalWrite_CheckedChanged(object sender, EventArgs e)
         {
-            this.checkBoxAppend.Enabled = this.radioButtonJournalWrite.Checked;
         }
 
         private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -381,5 +423,122 @@ namespace fxModel
                 "www.pipseq.org"));
         }
         #endregion
+
+        private void buttonCsRun_Click(object sender, EventArgs e)
+        {
+
+            List<string> pairs = new List<string>();
+            foreach (string p in this.checkedListBoxPairs.CheckedItems)
+            {
+                if (!isValidPair(p))
+                {
+                    log.error("timedOCOExpertEvent(), invalid pair {0}", p);
+                    continue;
+                }
+                pairs.Add(p);
+            }
+            if (pairs.Count == 0)
+            {
+                MessageBox.Show("No pairs selected");
+                return;
+            }
+
+            string timeFrame = "m1";
+            foreach (string t in mapTimeFrameRadio.Keys)
+            {
+                if (mapTimeFrameRadio[t].Checked)
+                {
+                    timeFrame = t;
+                }
+            }
+
+
+            runCsExpert(pairs, timeFrame);
+
+        }
+
+        private void runCsExpert(List<string> pairs, string timeFrame)
+        {
+            try
+            {
+                priceProcessor = new PriceProcessor(this, this, fxManager, fxUpdates);
+                expertFactory = new ExpertFactory(priceProcessor);
+                if (isJournalRead() || isJournalWrite())
+                {
+                    accumulatorMgr.Snapshot = getProperty("journalFile", "testdata");
+                    expertFactory.setJournal(
+                        pairs,
+                        getProperty("journalFile", "testdata"));
+                }
+                if (isJournalRead())
+                {
+                    accumulatorMgr.read();  // load history
+                    log.debug("PriceHistory done");
+                }
+
+                ConstructorInfo ci = null;
+                string exp = this.comboBoxExpertAttribs.Text;
+                string[] ea = exp.Split(';');
+                if (ea.Length > 0)
+                {
+                    string expert = ea[0];
+                    Type type = Type.GetType(expert);
+                    ci = type.GetConstructor(new Type[] { typeof(string), typeof(TimeFrame) });
+                    if (ci == null)
+                    {
+                        log.error("Invalid or no constructor for selected csExpert " + expert);
+                        return;
+                    }
+                }
+                foreach (string p in pairs)
+                {
+                    TimeFrame tf = ExpertFactory.TimeFrameInverseMap[timeFrame];
+                    ExpertBase es = (ExpertBase)ci.Invoke(new object[] { p, tf });
+                    expertFactory.subscribe(es);
+                    expertFactory.subscribePrice(es);
+                }
+
+                expertFactory.startExperts();
+                runStatus(true);
+
+                if (isJournalRead())
+                    expertFactory.readJournal();
+                else
+                {
+                    priceProcessor.start(pairs);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error running expert: " + ex.Message);
+                return;
+            }
+
+        }
+
+        private void setupCsExperts()
+        {
+            Dictionary<string,string> map = ExpertAttribute.getClasses();
+            int i = 0;
+            foreach (string exp in map.Keys)
+            {
+                this.comboBoxExpertAttribs.Items.Add(
+                    string.Format("{0}; {1}", exp, map[exp]));
+                if (i++ == 0)
+                    this.comboBoxExpertAttribs.Text =
+                        this.comboBoxExpertAttribs.Items[0].ToString();
+            }
+        }
+
+        private void comboBoxExpertAttribs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string text = comboBoxExpertAttribs.Text;
+            string[] ea = text.Split(';');
+            if (ea.Length > 0)
+            {
+                this.labelCsExpertDescription.Text = ea[1];
+            }
+
+        }
     }
 }

@@ -59,42 +59,57 @@ namespace fxCoreLink
             get { return timeframe; }
             set { timeframe = value; }
         }
-        private double pointsize = 0.0001;
-
-        public double PointSize
-        {
-            get { return pointsize; }
-            set { pointsize = value; }
-        }
-
-        private int limitPips = 0;
-
-        public int LimitPips
-        {
-            get { return limitPips; }
-            set { limitPips = value; }
-        }
-        private int stopPips = 0;
-
-        public int StopPips
-        {
-            get { return stopPips; }
-            set { stopPips = value; }
-        }
-        private int amount = 0;
-
-        public int Amount
-        {
-            get { return amount; }
-            set { amount = value; }
-        }
 
         public ExpertBase(string pair, TimeFrame timeframe)
         {
             this.pair = pair;
             this.timeframe = timeframe;
-            if (pair.EndsWith("JPY"))
-                pointsize = 0.01;
+        }
+
+        public string getOfferProperty(string key)
+        {
+            string value = null;
+            try
+            {
+                Factory.FxManager.getSession();
+                Dictionary<string, string> offerMap = Factory.FxManager.getOfferForPair(pair);
+                Factory.FxManager.closeSession();
+                value = offerMap[key];
+            }
+            catch (Exception e)
+            {
+                // ok for now
+            }
+            return value;
+        }
+
+        public double getOfferPropertyDouble(string key)
+        {
+            string value = getOfferProperty(key);
+            if (value == null) return 0.0;
+            return double.Parse(value);
+        }
+
+        public int getOfferPropertyInt(string key)
+        {
+            string value = getOfferProperty(key);
+            if (value == null) return 0;
+            return int.Parse(value);
+        }
+
+        public bool getOfferPropertyBool(string key)
+        {
+            string value = getOfferProperty(key);
+            if (value == null) return false;
+            if (value == "T") return true;
+            return false;
+        }
+
+        public DateTime getOfferPropertyDateTime(string key)
+        {
+            string value = getOfferProperty(key);
+            if (value == null) return DateTime.MinValue;
+            return DateTime.Parse(value);
         }
 
         public bool hasSufficientFunds()
@@ -124,15 +139,24 @@ namespace fxCoreLink
             return Factory.FxUpdates.getTrade(pair);
         }
 
-        public void enterPosition(string buySell, double last, string customId)
+        public void enterPosition(string buySell, int amount, double last, int stopPips, string customId)
         {
-            Factory.FxUpdates.enterPosition(Pair, buySell, last, StopPips, Amount, customId);
-
+            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, amount, customId);
         }
 
-        public void enterPosition(string buySell, double last, int stopPips, string customId)
+        public void enterPosition(string buySell, int amount, double last, int stopPips, int limitPips, string customId)
         {
-            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, Amount, customId);
+            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, limitPips, amount, customId);
+        }
+
+        public void enterPosition(string buySell,int amount, double last, int stopPips)
+        {
+            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, amount, Factory.UniqueId);
+        }
+
+        public void enterPosition(string buySell, int amount, double last, int stopPips, int limitPips)
+        {
+            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, limitPips, amount, Factory.UniqueId);
         }
 
         public void closePosition()
@@ -576,7 +600,7 @@ namespace fxCoreLink
     public interface PriceListener
     {
         void update(string pair, DateTime datetime, double bid, double ask);
-        void periodicUpdate(TimeFrame[] timeFrames, int counter);
+        void periodicUpdate(TimeFrame[] timeFrames, DateTime now);
     }
 
     public class TimePriceComponents
@@ -590,7 +614,20 @@ namespace fxCoreLink
             }
         }
 
-        static public Dictionary<string, TimeFrame> timeFrameInverseMap = new Dictionary<string,TimeFrame>();
+        public static Dictionary<string, TimeFrame> TimeFrameInverseMap
+        {
+            get
+            {
+                return timeFrameInverseMap;
+            }
+
+            set
+            {
+                timeFrameInverseMap = value;
+            }
+        }
+
+        private static Dictionary<string, TimeFrame> timeFrameInverseMap = new Dictionary<string, TimeFrame>();
         static public List<PriceComponent> priceComponentList = new List<PriceComponent>();
         //static private Dictionary<string, TimeFrame> timeStringMap = new Dictionary<string, TimeFrame>();
         static TimePriceComponents()
@@ -603,13 +640,13 @@ namespace fxCoreLink
             timeFrameMap.Add(TimeFrame.H4, "H4");
             timeFrameMap.Add(TimeFrame.D1, "D1");
 
-            timeFrameInverseMap.Add("m1",TimeFrame.m1);
-            timeFrameInverseMap.Add("m5", TimeFrame.m5);
-            timeFrameInverseMap.Add("m15", TimeFrame.m15);
-            timeFrameInverseMap.Add("m30", TimeFrame.m30);
-            timeFrameInverseMap.Add("H1", TimeFrame.H1);
-            timeFrameInverseMap.Add("H4", TimeFrame.H4);
-            timeFrameInverseMap.Add("D1", TimeFrame.D1);
+            TimeFrameInverseMap.Add("m1",TimeFrame.m1);
+            TimeFrameInverseMap.Add("m5", TimeFrame.m5);
+            TimeFrameInverseMap.Add("m15", TimeFrame.m15);
+            TimeFrameInverseMap.Add("m30", TimeFrame.m30);
+            TimeFrameInverseMap.Add("H1", TimeFrame.H1);
+            TimeFrameInverseMap.Add("H4", TimeFrame.H4);
+            TimeFrameInverseMap.Add("D1", TimeFrame.D1);
 
             priceComponentList.Add(PriceComponent.AskClose);
             priceComponentList.Add(PriceComponent.AskHigh);
@@ -817,13 +854,13 @@ namespace fxCoreLink
         #region PriceListener implementation
 
         private object lockObject = new System.Object();
-        public void periodicUpdate(TimeFrame[] timeFrames, int counter)
+        public void periodicUpdate(TimeFrame[] timeFrames, DateTime now)
         {
             foreach (string pair in getSubscribersPairs())
             {
                 foreach (TimeFrame timeFrame in timeFrames.Reverse())
                 {
-                    if (PriceProcessor.isEvenIncrement(timeFrame, counter))
+                    if (PriceProcessor.isEvenIncrement(timeFrame, now))
                     {
                         bool found = periodicUpdate(pair, timeFrame);
                         if (found)
@@ -832,7 +869,13 @@ namespace fxCoreLink
                 }
             }
         }
-
+        /*
+        Subscribe for maximum timeframe to receive in expert.timeUpdate() 
+        timeUpdate() gets all periods equal to and less than the timeframe occurences
+        for it's TimeFrame subscription
+        Within expert.timeUpdate(TimeFrame), receives a timeframe param.  Expert 
+        can choose to act on any or all timeframe occurences with logic
+        */
         public bool periodicUpdate(string pair, TimeFrame timeFrame)
         {
             List<ExpertBase> listExperts = getSubscribers(pair, timeFrame);
@@ -874,16 +917,32 @@ namespace fxCoreLink
         #region journaling
         HashSet<string> pairs;
         string file;
-        bool append=false;
-        public void setJournal(List<string> pairs, string file, bool append)
+        bool append = true;  // all file writes are appended
+        bool init = false;
+        public void setJournal(List<string> pairs, string file)
         {
             this.pairs = new HashSet<string>(pairs);
             this.file = file;
             this.file += ".tdv";
-            this.append = append;
+        }
+        private void initJournal()
+        {
+            if (!init)
+            {
+                try
+                {
+                    File.Delete(file);  // journal to a new file
+                }
+                catch (FileNotFoundException fnfe)
+                {
+                    //do nothing
+                }
+                init = true;
+            }
         }
         private void journal(DateTime datetime, string pair, double bid, double ask)
         {
+            initJournal();
             if (pairs.Contains(pair))
                 using (StreamWriter sw = new StreamWriter(file, append))
                 {
@@ -893,6 +952,7 @@ namespace fxCoreLink
         }
         private void journal(string pair, TimeFrame timeframe)
         {
+            initJournal();
             if (pairs.Contains(pair))
                 using (StreamWriter sw = new StreamWriter(file, append))
                 {
@@ -902,6 +962,7 @@ namespace fxCoreLink
         }
         private void journal(string command)
         {
+            initJournal();
             using (StreamWriter sw = new StreamWriter(file, append))
             {
                 sw.WriteLine(string.Format(
@@ -947,10 +1008,10 @@ namespace fxCoreLink
                     DateTime dt = DateTime.Parse(fields[0]);
                     string pr = fields[1];
                     string tf = fields[2];
-                    TimeFrame timeframe = timeFrameInverseMap[tf];
+                    TimeFrame timeframe = TimeFrameInverseMap[tf];
                     if (pairs.Contains(pr))
                     {
-                        roll(pr);
+                        roll(pr, dt);
                         periodicUpdate(pr, timeframe);
                     }
                     break;
@@ -981,14 +1042,9 @@ namespace fxCoreLink
 
         }
 
-        Dictionary<string, int> mapPairHistoryCounter = new Dictionary<string, int>();
-        private void roll(string pair)
+        private void roll(string pair, DateTime now)
         {
-            if (!mapPairHistoryCounter.ContainsKey(pair))
-            {
-                mapPairHistoryCounter.Add(pair, 0);
-            }
-            fxUpdates.AccumMgr.roll(pair, mapPairHistoryCounter[pair]++);
+            fxUpdates.AccumMgr.roll(pair, now);
         }
         #endregion
     }
@@ -1117,18 +1173,44 @@ namespace fxCoreLink
 
 
         #region expert updates
+        // Two timers are created in the following methods
+        // The first is a minute correction timer to align with the clock minute start
+        // The second is is the minute periodic timer driving the timeframe periodic updates
+        // the minute correction timer starts the periodic timer at the top of the minute
         private void timedDisplayEvent(int seconds, string type, TimeFrame[] timeFrames)
         {
             int interval = (int)seconds;
             Timing timer = TimerMgr.getInstance().create(type, interval);
             TimerMgr.getInstance().putTimerMap(timer, "types", timeFrames);
 
+            // This call starts historical price update
+            // If the number of bars of historical is small, update can occur in a few seconds
+            // For large number of pairs and bars (e.g., > 100), there is a potential for 
+            // historical prices to take too long potentially causing a gap in timing.
+            // This may be worse if time is in proximity to minute == 0
+            // TODO--address issues caused by this situation
+            priceUpdateProcess = new PriceUpdateProcess(this, timeFrames);
+
+            // now set up minute correction timer
+            DateTime now = DateTime.Now;
+            int intervalCorrect = 60 - now.Second;
+            Timing timerCorrect = TimerMgr.getInstance().create("correction", intervalCorrect);
+            TimerMgr.getInstance().putTimerMap(timerCorrect, "timer", timer);
+
+            timerCorrect.Elapsed += new System.Timers.ElapsedEventHandler(minuteCorrectionEventHandler);
+            timerCorrect.Start();
+        }
+        void minuteCorrectionEventHandler(object sender, EventArgs e)
+        {
+            Timing timerCorrect = (Timing)sender;
+
+            Timing timer = (Timing)TimerMgr.getInstance().getTimerMap(timerCorrect, "timer");
+            TimerMgr.getInstance().remove(timerCorrect);
             timer.Elapsed += new System.Timers.ElapsedEventHandler(timedDisplayEventHandler);
             timer.Start();
             // kick off immediately
-            priceUpdateProcess = new PriceUpdateProcess(this, timeFrames);
+            TimeFrame[] timeFrames = (TimeFrame[])TimerMgr.getInstance().getTimerMap(timer, "types");
             priceUpdateProcess.process();
-
         }
         void timedDisplayEventHandler(object sender, EventArgs e)
         {
@@ -1142,14 +1224,18 @@ namespace fxCoreLink
             priceUpdateProcess.process();
         }
 
-        int historyCounter = 0;
-
-        public bool isEvenIncrement(TimeFrame timeFrame)
+        private static int getHistoryCounter(DateTime now)
         {
-            return isEvenIncrement(timeFrame, historyCounter);
+            if (now == DateTime.MinValue)
+            {
+                now = DateTime.Now;
+            }
+            return (now.Day - 1) * 24 * 60 + now.Hour * 60 + now.Minute;
         }
-        public static bool isEvenIncrement(TimeFrame timeFrame, int cnt)
+
+        public static bool isEvenIncrement(TimeFrame timeFrame, DateTime now)
         {
+            int cnt = getHistoryCounter(now);
             switch (timeFrame)
             {
                 case TimeFrame.m1: return 0 == 0;
@@ -1165,7 +1251,7 @@ namespace fxCoreLink
 
         public void roll()
         {
-            AccumMgr.roll(historyCounter);
+            AccumMgr.roll(DateTime.MinValue);
         }
 
         // this stays in factory
@@ -1174,14 +1260,10 @@ namespace fxCoreLink
             List<PriceListener> listListeners = accumMgr.getSubscribers();
             foreach (PriceListener listener in listListeners)
             {
-                listener.periodicUpdate(timeFrames,historyCounter);
+                listener.periodicUpdate(timeFrames, DateTime.MinValue);
             }
-            historyCounter++;
         }
 
-        // TODO moves to OCOForm
-        // pairs from selectable pairs
-        // need timeframe and pricecomponent in OCOForm?  Or central place for initialization
         public void updatePriceHistory(TimeFrame[] timeFrames)
         {
             log.debug("updatePriceHistory() start");
@@ -1189,9 +1271,6 @@ namespace fxCoreLink
 
             foreach (TimeFrame timeFrame in timeFrames)
             {
-                if (!isEvenIncrement(timeFrame, historyCounter))
-                    continue;
-
                 HistoricPrices prices = fxManager.getHistoricPrices();
                 foreach (string pair in accumMgr.getPairs())
                 {
@@ -1208,7 +1287,6 @@ namespace fxCoreLink
                         }
                         accum.add(list);
                     }
-
                 }
                 fxManager.closeHistoricPrices();
             }
@@ -1232,6 +1310,7 @@ namespace fxCoreLink
         {
             this.priceProcessor = priceProcessor;
             this.types = timeFrames;
+            priceProcessor.updatePriceHistory(types);
         }
 
         public void process()
@@ -1246,7 +1325,7 @@ namespace fxCoreLink
             {
                 if (!initialized)
                 {
-                    priceProcessor.updatePriceHistory(types);
+                    //priceProcessor.updatePriceHistory(types);
                 }
                 priceProcessor.roll();
                 priceProcessor.updatePriceListeners(types);

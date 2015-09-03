@@ -54,7 +54,7 @@ namespace fxCoreLink
 
         public void closeMarketTrade()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void closeOcoTrade()
@@ -92,12 +92,17 @@ namespace fxCoreLink
             throw new NotImplementedException();
         }
 
-        public MarketTrade getMarketTrade()
+        public IMarketTrade getMarketTrade()
+        {
+            return new MarketTradeSimulated();
+        }
+
+        public OCOTrade getOcoTrade()
         {
             throw new NotImplementedException();
         }
 
-        public OCOTrade getOcoTrade()
+        public Dictionary<string, string> getOfferForPair(string pair)
         {
             throw new NotImplementedException();
         }

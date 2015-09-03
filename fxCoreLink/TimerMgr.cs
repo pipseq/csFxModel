@@ -41,14 +41,14 @@ namespace fxCoreLink
         {
             if (list.Contains(timer))
             {
-                list.Remove(timer);
-                TagMap.Remove(timer);
-                timer.Stop();
-                //updateDisplay();
                 log.debug("remove, type="
                     + getTimerMap(timer, "type")
                     + ", interval=" + timer.Interval + " ms");
                 log.debug("remove, map={" + getMapToString(timer) + "}");
+                list.Remove(timer);
+                TagMap.Remove(timer);
+                timer.Stop();
+                //updateDisplay();
                 return true;
             }
             return false;

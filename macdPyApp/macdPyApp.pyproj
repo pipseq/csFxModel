@@ -6,8 +6,7 @@
     <ProjectGuid>e01c8251-c519-4621-96ab-9d9eed360152</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>macdPyApp.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\fxModel\bin\Debug\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <InterpreterId>{80659ab7-4d53-4e0c-8588-a766116cbd46}</InterpreterId>
     <LaunchProvider>IronPython (.NET) launcher</LaunchProvider>
@@ -31,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="macdSignal.py" />
+    <Compile Include="MacdExpert.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
