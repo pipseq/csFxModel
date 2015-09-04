@@ -1,4 +1,5 @@
 using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace fxCoreLink
     }
 
 
-    public class OCOTrade
+    public class OCOTrade : IOCOTrade
     {
         Logger log = Logger.LogManager("OCOTrade");
         public OCOTrade(O2GSession session, Display display)
@@ -30,17 +31,13 @@ namespace fxCoreLink
         private Dictionary<string, Action> mActions = new Dictionary<string, Action>();
         ELSResponseListener responseListener;
 
-        public string tradeOCO(IFXManager fxManager, FxUpdates fxUpdates, string pair, int amount, int entryPips, int stopPips, int limitPips, double bid, double ask)
+        public string tradeOCO(string accountId, string offerId, double pointSize, string uniqueId, string pair, int amount, int entryPips, int stopPips, int limitPips, double bid, double ask)
         {
-            string offerId = fxUpdates.getPairOfferId(pair);
-            double pointSize = fxUpdates.getPairPointSize(pair);
             getOfferRate(session, pair, entryPips, bid, ask, pointSize);
 
             responseListener = new ELSResponseListener(session, display);
             session.subscribeResponse(responseListener);
 
-            string accountId = fxManager.AccountID;
-            string uniqueId = fxUpdates.UniqueId;
             int mAmount = amount * 1000;
             createOCO(accountId, pair, mAmount, entryPips, stopPips, limitPips, uniqueId, offerId);
 

@@ -1,4 +1,5 @@
 using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Text;
@@ -117,8 +118,7 @@ namespace fxCoreLink
         }
 
         // Get current prices and calculate order price
-        // NOT USED!!
-        public void GetOfferRate(O2GSession session, string sInstrument, string mBuySell, string mOrderType, 
+        private void GetOfferRate(O2GSession session, string sInstrument, string mBuySell, string mOrderType, 
             int stopPips, int limitPips)
         {
             double dBid = 0.0;
@@ -184,7 +184,7 @@ namespace fxCoreLink
             }
         }
         // Get account for trade
-        public void GetAccount(O2GSession session)
+        private void GetAccount(O2GSession session)
         {
             try
             {

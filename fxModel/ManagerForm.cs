@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using fxCoreLink;
 using Common;
+using Common.fx;
 using csExperts;
 using System.Reflection;
 using System.Configuration;
+using simulatedTrading;
 
 namespace fxModel
 {
-    public partial class ManagerForm : Form, Display, fxCoreLink.Control, Output
+    public partial class ManagerForm : Form, Display, Common.Control, Output
     {
         #region lifecycle
         private Logger log = Logger.LogManager("ManagerForm");

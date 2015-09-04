@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace fxCoreLink
+namespace Common
 {
     #region interface definition
     public interface Control

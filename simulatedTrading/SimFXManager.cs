@@ -1,8 +1,10 @@
 ﻿using fxcore2;
+using Common.fx;
+//using fxCoreLink;
 using System;
 using System.Collections.Generic;
 
-namespace fxCoreLink
+namespace simulatedTrading
 {
     public class SimFXManager : IFXManager
     {
@@ -67,27 +69,27 @@ namespace fxCoreLink
             //throw new NotImplementedException();
         }
 
-        public ClosePositions getClosePositions()
+        public IClosePositions getClosePositions()
         {
             throw new NotImplementedException();
         }
 
-        public DeleteOrders getCurrentActiveDeleteOrders()
+        public IDeleteOrders getCurrentActiveDeleteOrders()
         {
             throw new NotImplementedException();
         }
 
-        public DeleteOrders getDeleteOrders()
+        public IDeleteOrders getDeleteOrders()
         {
             throw new NotImplementedException();
         }
 
-        public ELSTrade getElsTrade()
+        public IELSTrade getElsTrade()
         {
             throw new NotImplementedException();
         }
 
-        public HistoricPrices getHistoricPrices()
+        public IHistoricPrices getHistoricPrices()
         {
             throw new NotImplementedException();
         }
@@ -97,7 +99,7 @@ namespace fxCoreLink
             return new MarketTradeSimulated();
         }
 
-        public OCOTrade getOcoTrade()
+        public IOCOTrade getOcoTrade()
         {
             throw new NotImplementedException();
         }

@@ -35,6 +35,9 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="fxcore2">
+      <HintPath>..\..\..\Program Files\Candleworks\ForexConnectAPIx64\bin\net\dotnet40\fxcore2.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\FxDemo\packages\Newtonsoft.Json.7.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -55,6 +58,17 @@
     <Compile Include="Contract.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="FileUtil.cs" />
+    <Compile Include="fx\IClosePositions.cs" />
+    <Compile Include="fx\IDeleteOrders.cs" />
+    <Compile Include="fx\IELSTrade.cs" />
+    <Compile Include="fx\IFXManager.cs" />
+    <Compile Include="fx\IHistoricPrices.cs" />
+    <Compile Include="fx\IMarketTrade.cs" />
+    <Compile Include="fx\IOCOTrade.cs" />
+    <Compile Include="fx\PriceListener.cs" />
+    <Compile Include="fx\TimeFrame.cs" />
+    <Compile Include="fx\TimePriceComponents.cs" />
+    <Compile Include="IControlView.cs" />
     <Compile Include="Journal.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MailSender.cs" />

@@ -1,10 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using fxCoreLink;
+using Common;
+using Common.fx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using simulatedTrading;
 
 namespace fxCoreLink.Tests
 {
@@ -16,7 +19,7 @@ namespace fxCoreLink.Tests
     }
 
     [TestClass()]
-    public class ExpertBaseTests:fxCoreLink.Display,fxCoreLink.Control
+    public class ExpertBaseTests:Common.Display,Common.Control
     {
         AccumulatorMgr accumulatorMgr = new AccumulatorMgr();
         ExpertTest expert = new ExpertTest("AUD/JPY", TimeFrame.m1);

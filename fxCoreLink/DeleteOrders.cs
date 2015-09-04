@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Threading;
 
 namespace fxCoreLink
 {
-    public class DeleteOrders : IDisposable
+    public class DeleteOrders : IDisposable, IDeleteOrders
     {
         Logger log = Logger.LogManager("DeleteOrders");
         public DeleteOrders(O2GSession session, Display display)
@@ -68,6 +69,12 @@ namespace fxCoreLink
             }
         }
 
+        // if delete order pending due to manual delete
+        // provide a reset to complete the call
+        public void pendingDeleteOrderNotifyComplete()
+        {
+            manualEvent.Set();
+        }
 
         //// original
         //public void deleteOrder(string sOrderID)

@@ -1,11 +1,12 @@
 using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Threading;
 
 namespace fxCoreLink
 {
-    public class ELSTrade
+    public class ELSTrade : IELSTrade
     {
         private O2GSession mSession;
 

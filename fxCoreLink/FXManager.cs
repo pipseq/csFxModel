@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Collections.Generic;
@@ -192,14 +193,14 @@ namespace fxCoreLink
             return pctUsed < pct;
         }
 
-        private HistoricPrices historicPrices;
-        private MarketTrade marketTrade;
-        private ELSTrade elsTrade;
-        private OCOTrade ocoTrade;
-        private DeleteOrders deleteOrders;
-        private ClosePositions closePositions;
+        private IHistoricPrices historicPrices;
+        private IMarketTrade marketTrade;
+        private IELSTrade elsTrade;
+        private IOCOTrade ocoTrade;
+        private IDeleteOrders deleteOrders;
+        private IClosePositions closePositions;
 
-        public HistoricPrices getHistoricPrices()
+        public IHistoricPrices getHistoricPrices()
         {
             getSession();
             if (historicPrices == null)
@@ -228,7 +229,7 @@ namespace fxCoreLink
             closeSession();
         }
 
-        public ELSTrade getElsTrade()
+        public IELSTrade getElsTrade()
         {
             getSession();
             if (elsTrade == null)
@@ -242,7 +243,7 @@ namespace fxCoreLink
             closeSession();
         }
 
-        public OCOTrade getOcoTrade()
+        public IOCOTrade getOcoTrade()
         {
             getSession();
             if (ocoTrade == null)
@@ -256,7 +257,7 @@ namespace fxCoreLink
             closeSession();
         }
 
-        public DeleteOrders getDeleteOrders()
+        public IDeleteOrders getDeleteOrders()
         {
             getSession();
             if (deleteOrders == null)
@@ -264,7 +265,7 @@ namespace fxCoreLink
             return deleteOrders;
         }
 
-        public DeleteOrders getCurrentActiveDeleteOrders()
+        public IDeleteOrders getCurrentActiveDeleteOrders()
         {
             return deleteOrders;
         }
@@ -275,7 +276,7 @@ namespace fxCoreLink
             closeSession();
         }
 
-        public ClosePositions getClosePositions()
+        public IClosePositions getClosePositions()
         {
             getSession();
             if (closePositions == null)

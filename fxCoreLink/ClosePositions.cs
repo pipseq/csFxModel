@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Threading;
 
 namespace fxCoreLink
 {
-    public class ClosePositions : IO2GResponseListener, IDisposable
+    public class ClosePositions : IO2GResponseListener, IDisposable, IClosePositions
     {
         Logger log = Logger.LogManager("ClosePositions");
         public ClosePositions(O2GSession session, Display display)

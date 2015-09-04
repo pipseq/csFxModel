@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.fx;
 using fxcore2;
 using Newtonsoft.Json;
 using System;
@@ -8,7 +9,7 @@ using System.Threading;
 
 namespace fxCoreLink
 {
-    public class HistoricPrices
+    public class HistoricPrices : IHistoricPrices
     {
         Logger log = Logger.LogManager("HistoricPrices");
         private O2GSession mSession;

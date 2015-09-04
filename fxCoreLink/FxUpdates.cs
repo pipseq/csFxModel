@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.fx;
 using fxcore2;
 using System;
 using System.Collections.Generic;
@@ -424,10 +425,10 @@ namespace fxCoreLink
             O2GOrderRow otr = (O2GOrderRow)e.RowData;
             if (otr == null)
                 return;
-            DeleteOrders delOrds = FxManager.getCurrentActiveDeleteOrders();
+            IDeleteOrders delOrds = FxManager.getCurrentActiveDeleteOrders();
             if (delOrds != null)
             {
-                delOrds.manualEvent.Set();
+                delOrds.pendingDeleteOrderNotifyComplete();
             }
             string orderId = otr.OrderID;
             string offerId = otr.OfferID;
@@ -622,8 +623,11 @@ namespace fxCoreLink
 
                         if (Control.ordersArmed())
                         {
-                            OCOTrade ocoTrade = FxManager.getOcoTrade();
-                            string OcoOrderId = ocoTrade.tradeOCO(FxManager, this, pair, amount, spread, stopPips, limitPips, bid, ask);
+                            IOCOTrade ocoTrade = FxManager.getOcoTrade();
+                            string offerId = this.getPairOfferId(pair);
+                            double pointSize = this.getPairPointSize(pair);
+                            string uniqueId = this.UniqueId;
+                            string OcoOrderId = ocoTrade.tradeOCO(FxManager.AccountID, offerId,pointSize,uniqueId, pair, amount, spread, stopPips, limitPips, bid, ask);
                             FxManager.closeOcoTrade();
                         }
                     }
@@ -779,7 +783,7 @@ namespace fxCoreLink
                         else
                             sBuySell = "B";
                         log.debug("Attempt close: " + pair + ", " + tradeId + " (queue depth=" + closeQueue.Count + ")");
-                        ClosePositions cp = FxManager.getClosePositions();
+                        IClosePositions cp = FxManager.getClosePositions();
                         cp.closePosition(tradeId, offerId, accountId, amount, sBuySell, sOrderID);
                         FxManager.closeClosePositions();
                         //log.debug("Completed close: " + pair + ", " + tradeId);
@@ -833,7 +837,7 @@ namespace fxCoreLink
                     {
                         string pair = map["Pair"];
 
-                        DeleteOrders delOrds = FxManager.getDeleteOrders();
+                        IDeleteOrders delOrds = FxManager.getDeleteOrders();
 
                         foreach (string orderId in getOrdersByType(pair, "SE"))
                         {

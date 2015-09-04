@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using fxcore2;
+using Common.fx;
 
-namespace fxCoreLink
+namespace Common.fx
 {
     public interface IFXManager
     {
@@ -15,13 +16,13 @@ namespace fxCoreLink
         void closeMarketTrade();
         void closeOcoTrade();
         void closeSession();
-        ClosePositions getClosePositions();
-        DeleteOrders getCurrentActiveDeleteOrders();
-        DeleteOrders getDeleteOrders();
-        ELSTrade getElsTrade();
-        HistoricPrices getHistoricPrices();
+        IClosePositions getClosePositions();
+        IDeleteOrders getCurrentActiveDeleteOrders();
+        IDeleteOrders getDeleteOrders();
+        IELSTrade getElsTrade();
+        IHistoricPrices getHistoricPrices();
         IMarketTrade getMarketTrade();
-        OCOTrade getOcoTrade();
+        IOCOTrade getOcoTrade();
         void getSession();
         Dictionary<string, Dictionary<string, string>> getTable(string sTable);
         Dictionary<string, string> getOfferForPair(string pair);
