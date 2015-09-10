@@ -250,6 +250,7 @@ namespace fxModel
                     double pips = TransactionManager.getInstance().getClosedTrade().getClosedPositionGross(pair);
                     Console.WriteLine("Gross for {0} is {1}", pair, pips);
                     appendLine("{0}={1}", pair, pips);
+                    log.debug("Gross for {0}={1}", pair, pips);
                 }
                 TransactionManager.snapshot();
             }

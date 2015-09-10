@@ -97,7 +97,6 @@ namespace simulatedTrading
         public void processOrders(string pair, DateTime dt, double currentPrice)
         {
             bool found = false;
-            int ndx = 0;
             if (mapEntryOrder.ContainsKey(pair))
             foreach (Dictionary<string, object> map in mapEntryOrder[pair])
             {
@@ -106,44 +105,25 @@ namespace simulatedTrading
                 string stopOrLimit = (string)map["stopOrLimit"];
                 if (stopOrLimit == "LIMIT" && entry == "BUY" && currentPrice <= price)
                 {
-                    Dictionary<string, object> mapData = position.closePosition(pair);
-                    closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
                     found = true;
                 }
                 else if (stopOrLimit == "STOP" && entry == "BUY" && currentPrice >= price)
                 {
-                    Dictionary<string, object> mapData = position.closePosition(pair);
-                    closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
                     found = true;
                 }
                 else if (stopOrLimit == "LIMIT" && entry == "SELL" && currentPrice >= price)
                 {
-                    Dictionary<string, object> mapData = position.closePosition(pair);
-                    closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
                     found = true;
                 }
                 else if (stopOrLimit == "STOP" && entry == "SELL" && currentPrice <= price)
                 {
-                    Dictionary<string, object> mapData = position.closePosition(pair);
-                    closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
                     found = true;
                 }
-                ndx++;
             }
             if (found)
             {
-                int n = ndx - 1;
-                if (n % 2 > 0)
-                {
-                    mapEntryOrder[pair].RemoveAt(n);
-                    mapEntryOrder[pair].RemoveAt(n - 1);
-                }
-                else
-                {
-                    mapEntryOrder[pair].RemoveAt(n + 1);
-                    mapEntryOrder[pair].RemoveAt(n);
-                }
-
+                Dictionary<string, object> mapData = position.closePosition(pair);
+                closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
             }
         }
         public void closeOrders(string pair, string openEntry)
@@ -168,9 +148,7 @@ namespace simulatedTrading
             }
             foreach (Dictionary<string, object> map in removeList)
             {
-                {
-                    mapEntryOrder[pair].Remove(map);
-                }
+                mapEntryOrder[pair].Remove(map);
             }
         }
     }

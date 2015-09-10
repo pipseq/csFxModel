@@ -112,6 +112,10 @@ namespace simulatedTrading
                 mapData = list[0];
                 list.RemoveAt(0);
             }
+            foreach (Listener l in positionListenerMgr.getListeners())
+            {
+                ((PositionListener)l).positionChangeNotification(pair, mapData, StateEvent.Delete);
+            }
             return mapData;
         }
     }

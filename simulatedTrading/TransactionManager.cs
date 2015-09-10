@@ -78,10 +78,11 @@ namespace simulatedTrading
         public void positionChangeNotification(string pair, Dictionary<string, object> map, StateEvent e)
         {
             if (e == StateEvent.Delete)
+            {
                 getOrder().closeOrders(pair, (string)map["entry"]);
+            }
             else if (e == StateEvent.Create)
             {
-                //fxUpdates.
             }
         }
 

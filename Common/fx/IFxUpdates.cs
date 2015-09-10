@@ -29,11 +29,6 @@ namespace Common.fx
         bool hasPosition(string tradeId);
         bool hasPositionInPair(string pair);
         void readRows();
-        void run(object pairObj);
-        void runClose();
-        void runDeleteOrder();
-        void runOpen();
-        void runOpenOco();
         void setCanProcess(bool val);
     }
 }

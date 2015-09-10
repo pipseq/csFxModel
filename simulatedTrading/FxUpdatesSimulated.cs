@@ -184,88 +184,6 @@ namespace simulatedTrading
         {
             throw new NotImplementedException();
         }
-        void tradesTable_RowDeleted(object sender, RowEventArgs e)
-        {
-            O2GTradeRow otr = (O2GTradeRow)e.RowData;
-            if (otr == null)
-                return;
-            string tradeId = otr.TradeID;
-            string offerId = otr.OfferID;
-            string pair = "n/a";
-            if (tradeId != null && offerId != null)
-                lock (posnLockObject)
-                {
-                    pair = this.mapOfferIdPair[offerId];
-                    if (mapTrade.ContainsKey(tradeId))
-                    {
-                        mapTrade.Remove(tradeId);
-                    }
-                    if (mapPairTrade.ContainsKey(pair))
-                    {
-                        List<string> lt = mapPairTrade[pair];
-                        lt.Remove(tradeId);
-                        if (lt.Count == 0)
-                            mapPairTrade.Remove(pair);
-                    }
-                }
-            log.debug(string.Format("closed, {0}, tradeId={1}, OpenOrderID={2}, {3}, {4}",
-                pair, tradeId, otr.OpenOrderID, otr.BuySell, otr.Amount));
-            if (Debug)
-            {
-                log.debug("Posn deleted");
-                printPairTrade();
-            }
-        }
-
-        //void tradesTable_RowAdded(object sender, RowEventArgs e)
-        //{
-        //    addTradeRow((O2GTradeRow)e.RowData);
-        //}
-
-        //void loadTrades(List<O2GTradeRow> lTrades)
-        //{
-        //    foreach (O2GTradeRow otr in lTrades)
-        //    {
-        //        addTradeRow(otr);
-        //    }
-        //}
-        void addTradeRow(O2GTradeRow otr)
-        {
-            if (otr == null)
-                return;
-            string tradeId = otr.TradeID;
-            string offerId = otr.OfferID;
-            string pair = this.mapOfferIdPair[offerId];
-            Dictionary<string, string> tradeMap = new Dictionary<string, string>();
-            if (tradeId != null && offerId != null)
-                lock (posnLockObject)
-                {
-                    tradeMap["AccountID"] = otr.AccountID; ;
-                    tradeMap["Amount"] = "" + otr.Amount;
-                    tradeMap["OfferID"] = otr.OfferID;
-                    tradeMap["OrderID"] = otr.OpenOrderID;
-                    tradeMap["BuySell"] = otr.BuySell;
-                    tradeMap["OpenRate"] = "" + otr.OpenRate;
-                    tradeMap["Pair"] = pair;
-                    tradeMap["TradeID"] = tradeId;
-                    mapTrade.Add(tradeId, tradeMap);
-                    if (!mapPairTrade.ContainsKey(pair))
-                    {
-                        mapPairTrade.Add(pair, new List<string>());
-                    }
-                    List<string> lt = mapPairTrade[pair];
-                    lt.Add(tradeId);
-                }
-            log.debug(string.Format("trade, {0}, tradeId={1}, orderId={2}, {3}, {4}, accountId={5}, time={6}",
-                pair, tradeMap["TradeID"], tradeMap["OrderID"], tradeMap["BuySell"],
-                tradeMap["Amount"], tradeMap["AccountID"],
-                Util.getTimeNowFormatted()));
-            if (Debug)
-            {
-                printPairTrade();
-            }
-        }
-
 
         public bool hasOrderInPair(string pair)
         {
@@ -522,26 +440,6 @@ namespace simulatedTrading
             TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId,stopPips,limitPips);
         }
 
-        //public Dictionary<string, string> getOrder(string pair)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public List<string> getOrders(string pair)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public List<string> getOrdersByType(string pair, string type)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public List<string> getOrdersByTypes(string pair, List<string> types)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public string getPairOfferId(string pair)
         {
             throw new NotImplementedException();
@@ -552,52 +450,7 @@ namespace simulatedTrading
             throw new NotImplementedException();
         }
 
-        //public Dictionary<string, string> getTrade(string pair)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public bool hasOrderInPair(string pair)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public bool hasPosition(string tradeId)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public bool hasPositionInPair(string pair)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public void readRows()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void run(object pairObj)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void runClose()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void runDeleteOrder()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void runOpen()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void runOpenOco()
         {
             throw new NotImplementedException();
         }
