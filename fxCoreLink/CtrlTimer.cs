@@ -85,20 +85,5 @@ namespace fxCoreLink
             }
             return sb.ToString();
         }
-
-        #region utility methods
-        public static DateTime getTimeNow()
-        {
-            return DateTime.Now;
-        }
-
-        public static string getTimeNowFormatted()
-        {
-            return getTimeNow().ToString("yyyy-MM-dd HH:mm:ss.fff");
-        }
-
-
-        #endregion
-
     }
 }

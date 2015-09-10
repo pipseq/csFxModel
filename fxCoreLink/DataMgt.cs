@@ -24,7 +24,7 @@ namespace fxCoreLink
     {
         SECOND = 0, MINUTE = 1, HOUR = 2, DAY = 3
     }
-    public class Accumulator
+    public class Accumulator : IAccumulator
     {
         private List<double> list = new List<double>();
         private static int cntr = 0;
@@ -77,7 +77,7 @@ namespace fxCoreLink
         }
 
     }
-    public class AccumulatorMgr
+    public class AccumulatorMgr : IAccumulatorMgr
     {
         Logger log = Logger.LogManager("AccumulatorMgr");
         Dictionary<string, Dictionary<TimeFrame, Dictionary<PriceComponent, Accumulator>>> pairTimePriceMap
@@ -106,7 +106,7 @@ namespace fxCoreLink
                 priceListeners.Remove(priceListener);
         }
 
-        public Accumulator getAccum(string pair, TimeFrame timeFrame, PriceComponent priceComponent)
+        public IAccumulator getAccum(string pair, TimeFrame timeFrame, PriceComponent priceComponent)
         {
             return pairTimePriceMap[pair][timeFrame][priceComponent];
         }
@@ -239,9 +239,9 @@ namespace fxCoreLink
             foreach (TimeFrame timeFrame in ExpertFactory.timeFrameMap.Keys)
                 if (PriceProcessor.isEvenIncrement(timeFrame, now))
                 {
-                    Accumulator accumLa = getAccum(pair, timeFrame, PriceComponent.BidClose);
-                    Accumulator accumHi = getAccum(pair, timeFrame, PriceComponent.BidHigh);
-                    Accumulator accumLo = getAccum(pair, timeFrame, PriceComponent.BidLow);
+                    IAccumulator accumLa = getAccum(pair, timeFrame, PriceComponent.BidClose);
+                    IAccumulator accumHi = getAccum(pair, timeFrame, PriceComponent.BidHigh);
+                    IAccumulator accumLo = getAccum(pair, timeFrame, PriceComponent.BidLow);
                     if (!Double.IsNaN(last))
                         accumLa.addLast(last);
                     if (timeFrame == TimeFrame.m1)
@@ -331,13 +331,13 @@ namespace fxCoreLink
             }
         }
 
-        private void rollDetail(string pair, int offset, TimeFrame baseTimeFrame, Accumulator accumHi, Accumulator accumLo)
+        private void rollDetail(string pair, int offset, TimeFrame baseTimeFrame, IAccumulator accumHi, IAccumulator accumLo)
         {
             double high = Double.NaN;
             double low = Double.NaN;
 
-            Accumulator accumHi2 = getAccum(pair, baseTimeFrame, PriceComponent.BidHigh);
-            Accumulator accumLo2 = getAccum(pair, baseTimeFrame, PriceComponent.BidLow);
+            IAccumulator accumHi2 = getAccum(pair, baseTimeFrame, PriceComponent.BidHigh);
+            IAccumulator accumLo2 = getAccum(pair, baseTimeFrame, PriceComponent.BidLow);
 
             List<double> ldh = accumHi2.getList();
             if (ldh.Count >= offset)

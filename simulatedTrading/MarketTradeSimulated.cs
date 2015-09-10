@@ -11,10 +11,11 @@ namespace simulatedTrading
 {
     class MarketTradeSimulated : IMarketTrade
     {
-        int cnt = 1;
         public string trade(string mInstrument, int mAmount, string mBuySell, int stopPips, int limitPips, double expectedPrice, string customId)
         {
-            return "simTrade" + cnt++;
+            string orderid = TransactionManager.getInstance().getOrder()
+                .createMarketOrder(mInstrument, DateTime.Now, mBuySell, mAmount, expectedPrice, customId, stopPips, limitPips);
+            return orderid;
         }
     }
 }

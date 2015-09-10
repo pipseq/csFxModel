@@ -11,18 +11,33 @@ namespace simulatedTrading
         public Dictionary<string, List<Dictionary<string, object>>> mapPosition
             = new Dictionary<string, List<Dictionary<string, object>>>();
         ClosedTrade closedTrade = new ClosedTrade();
+        ListenerMgr positionListenerMgr = new ListenerMgr();
 
         public Position(ClosedTrade closedTrade)
         {
             this.closedTrade = closedTrade;
         }
 
-        public void createPosition(string pair, DateTime dt, string BorS, int amount, double price, string customId)
+        public Position(ClosedTrade closedTrade, PositionListener positionListener)
         {
+            this.closedTrade = closedTrade;
+            addPositionListener(positionListener);
+        }
 
+        public void addPositionListener(PositionListener positionListener)
+        {
+            positionListenerMgr.addListener(positionListener);
+        }
+
+        int tradeId = 1;
+        public bool createPosition(string pair, DateTime dt, string BorS, int amount, double price, string customId)
+        {
+            // TODO -- need to handle partial position closes
             // Check if this new posn closes a previous opposite posn
             if (canClosePosition(pair, dt, BorS, amount, price, customId))
-                return;
+            {
+                return false;   // no new posn created due to previous opposing posn closed
+            }
 
             if (!mapPosition.ContainsKey(pair))
             {
@@ -35,6 +50,14 @@ namespace simulatedTrading
             mapPosition[pair][ndx].Add("price", price);
             mapPosition[pair][ndx].Add("customId", customId);
             mapPosition[pair][ndx].Add("datetime", dt);
+            mapPosition[pair][ndx].Add("tradeId", ""+(tradeId++));
+
+            foreach (Listener l in positionListenerMgr.getListeners())
+            {
+                ((PositionListener)l).positionChangeNotification(pair, mapPosition[pair][ndx], StateEvent.Create);
+            }
+
+            return true;    // creates new position
         }
 
         public bool canClosePosition(string pair, DateTime dt, string BorS, int amount, double currentPrice, string customId)
@@ -67,7 +90,13 @@ namespace simulatedTrading
                     ndx++;
                 }
                 if (closed)
+                {
+                    foreach (Listener l in positionListenerMgr.getListeners())
+                    {
+                        ((PositionListener)l).positionChangeNotification(pair, mapPosition[pair][ndx], StateEvent.Delete);
+                    }
                     mapPosition[pair].RemoveAt(ndx);
+                }
             }
 
             return closed;

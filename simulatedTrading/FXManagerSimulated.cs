@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace simulatedTrading
 {
-    public class SimFXManager : IFXManager
+    public class FXManagerSimulated : IFXManager
     {
         public string AccountID
         {

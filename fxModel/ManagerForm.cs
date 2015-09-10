@@ -17,7 +17,7 @@ namespace fxModel
         private Logger log = Logger.LogManager("ManagerForm");
         private PriceProcessor priceProcessor;
         private IFXManager fxManager;
-        private FxUpdates fxUpdates;
+        private IFxUpdates fxUpdates;
         private AccumulatorMgr accumulatorMgr;
         private bool ErrorState = false; // needs implementation
         private MailSender mailSender = new MailSender();
@@ -26,6 +26,7 @@ namespace fxModel
         private static Dictionary<string, List<string>> curMap = new Dictionary<string, List<string>>();
         private Dictionary<string, RadioButton> mapTimeFrameRadio = new Dictionary<string, RadioButton>();
         private string projectFolder = Environment.CurrentDirectory;
+        private bool simulated = false;
 
         static ManagerForm()
         {
@@ -102,16 +103,20 @@ namespace fxModel
             {
                 if ("simulated" == conn.ToLower())
                 {
-                    fxManager = new SimFXManager();
-                } else {
-                    fxManager = new FXManager(this, user, pw, url, conn, mailSender);
+                    fxManager = new FXManagerSimulated();
+                    simulated = true;
+                    fxUpdates = new FxUpdatesSimulated(this, this, fxManager, accumulatorMgr);
                 }
-                fxUpdates = new FxUpdates(this, this, fxManager, accumulatorMgr);
+                else {
+                    fxManager = new FXManager(this, user, pw, url, conn, mailSender);
+                    fxUpdates = new FxUpdates(this, this, fxManager, accumulatorMgr);
+                }
             }
             catch (System.ComponentModel.WarningException ex)
             {
                 MessageBox.Show("No connection: " + ex.Message + "; simulation mode only");
-                fxManager = new SimFXManager();
+                fxManager = new FXManagerSimulated();
+                simulated = true;
                 fxUpdates = new FxUpdates(this, this, fxManager, accumulatorMgr);
                 this.toolStripStatusLabelConnection.Text = "simulation";
             }
@@ -138,7 +143,7 @@ namespace fxModel
             }
             if (fxUpdates != null)
             {
-                fxUpdates.canProcess = false;
+                fxUpdates.setCanProcess(false);
             }
 
         }
@@ -238,6 +243,15 @@ namespace fxModel
             try
             {
                 this.Invoke(new serviceGUIDelegate2(runStatusDelegate), false);
+                List<string> selectedPairs = new List<string>();
+                selectedPairs.AddRange(Property.getInstance().getDelimitedListProperty("selectedPairs"));
+
+                foreach (string pair in selectedPairs) {
+                    double pips = TransactionManager.getInstance().getClosedTrade().getClosedPositionGross(pair);
+                    Console.WriteLine("Gross for {0} is {1}", pair, pips);
+                    appendLine("{0}={1}", pair, pips);
+                }
+                TransactionManager.snapshot();
             }
             catch (InvalidOperationException e)
             {
@@ -491,6 +505,14 @@ namespace fxModel
                         log.error("Invalid or no constructor for selected csExpert " + expert);
                         return;
                     }
+                }
+                if (simulated)
+                foreach (string p in pairs)
+                {
+                    //TimeFrame tf = ExpertFactory.TimeFrameInverseMap[timeFrame];
+                    ExpertBase es = new PriceSimulator(p, TimeFrame.m1);
+                    //expertFactory.subscribe(es);
+                    expertFactory.subscribePrice(es);
                 }
                 foreach (string p in pairs)
                 {

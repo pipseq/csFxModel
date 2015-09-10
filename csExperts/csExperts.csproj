@@ -43,6 +43,7 @@
     <Compile Include="ExpertAttribute.cs" />
     <Compile Include="AdxRsiExpert.cs" />
     <Compile Include="MacdExpert.cs" />
+    <Compile Include="PriceSimulator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +54,10 @@
     <ProjectReference Include="..\fxCoreLink\fxCoreLink.csproj">
       <Project>{7639f97d-2abd-4730-ba65-8f63eef71ca9}</Project>
       <Name>fxCoreLink</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\simulatedTrading\simulatedTrading.csproj">
+      <Project>{3213409e-37d8-45f2-bd97-99f634846c1d}</Project>
+      <Name>simulatedTrading</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

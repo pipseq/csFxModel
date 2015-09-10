@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace fxCoreLink
 {
-    public class FxUpdates
+    public class FxUpdates : Common.fx.IFxUpdates
     {
 
         Logger log = Logger.LogManager("FxUpdates");
@@ -34,9 +34,9 @@ namespace fxCoreLink
             get { return fxManager; }
             set { fxManager = value; }
         }
-        private AccumulatorMgr accumMgr;
+        private IAccumulatorMgr accumMgr;
 
-        public AccumulatorMgr AccumMgr
+        public IAccumulatorMgr AccumMgr
         {
             get { return accumMgr; }
             set { accumMgr = value; }
@@ -120,7 +120,7 @@ namespace fxCoreLink
         }
         #region offers/price update
 
-        public void offersTable_RowChanged(object sender, RowEventArgs e)
+        void offersTable_RowChanged(object sender, RowEventArgs e)
         {
             O2GOfferTableRow otr = (O2GOfferTableRow)e.RowData;
             if (otr == null)
@@ -167,7 +167,11 @@ namespace fxCoreLink
             threadStats[pair].Add("thread", thread);
             thread.Start(pair);
         }
-        public bool canProcess = true;
+        bool canProcess = true;
+        public void setCanProcess(bool val)
+        {
+            canProcess = val;
+        }
         public void run(object pairObj)
         {
             string pair = "" + pairObj;
@@ -346,7 +350,7 @@ namespace fxCoreLink
             log.debug(string.Format("trade, {0}, tradeId={1}, orderId={2}, {3}, {4}, accountId={5}, time={6}",
                 pair, tradeMap["TradeID"], tradeMap["OrderID"], tradeMap["BuySell"], 
                 tradeMap["Amount"], tradeMap["AccountID"],
-                CtrlTimer.getTimeNowFormatted()));
+                Util.getTimeNowFormatted()));
             if (Debug)
             {
                 printPairTrade();

@@ -108,7 +108,7 @@ namespace fxCoreLink
             {
                 log.debug("Created OCO, OrderID={0} at {1}",
                     responseListener.OrderId,
-                    CtrlTimer.getTimeNowFormatted());
+                    Util.getTimeNowFormatted());
                 orderId = responseListener.OrderId;
             }
             else

@@ -58,10 +58,13 @@
     <Compile Include="Contract.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="FileUtil.cs" />
+    <Compile Include="fx\IAccumulator.cs" />
+    <Compile Include="fx\IAccumulatorMgr.cs" />
     <Compile Include="fx\IClosePositions.cs" />
     <Compile Include="fx\IDeleteOrders.cs" />
     <Compile Include="fx\IELSTrade.cs" />
     <Compile Include="fx\IFXManager.cs" />
+    <Compile Include="fx\IFxUpdates.cs" />
     <Compile Include="fx\IHistoricPrices.cs" />
     <Compile Include="fx\IMarketTrade.cs" />
     <Compile Include="fx\IOCOTrade.cs" />

@@ -1,5 +1,5 @@
 <properties>
-	<property key="ema.periods" value="50"/>
+	<property key="ema.periods" value="30"/>
 	<property key="rsi.periods" value="14"/>
 	<property key="macd.short" value="12"/>
 	<property key="macd.long" value="26"/>

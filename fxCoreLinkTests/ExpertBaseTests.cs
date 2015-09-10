@@ -31,7 +31,7 @@ namespace fxCoreLink.Tests
 
         public ExpertBaseTests()
         {
-            fxManager = new SimFXManager();
+            fxManager = new FXManagerSimulated();
             fxUpdates = new FxUpdates(this, this, fxManager, accumulatorMgr);
 
             priceProcessor = new PriceProcessor(this, this, fxManager, fxUpdates);

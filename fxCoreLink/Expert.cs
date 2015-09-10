@@ -641,8 +641,8 @@ namespace fxCoreLink
             get { return fxManager; }
             set { fxManager = value; }
         }
-        private FxUpdates fxUpdates;
-        public FxUpdates FxUpdates
+        private IFxUpdates fxUpdates;
+        public IFxUpdates FxUpdates
         {
             get { return fxUpdates; }
             set { fxUpdates = value; }
@@ -1037,15 +1037,15 @@ namespace fxCoreLink
             get { return fxManager; }
             set { fxManager = value; }
         }
-        private FxUpdates fxUpdates;
-        public FxUpdates FxUpdates
+        private IFxUpdates fxUpdates;
+        public IFxUpdates FxUpdates
         {
             get { return fxUpdates; }
             set { fxUpdates = value; }
         }
-        private AccumulatorMgr accumMgr;
+        private IAccumulatorMgr accumMgr;
 
-        public AccumulatorMgr AccumMgr
+        public IAccumulatorMgr AccumMgr
         {
             get { return accumMgr; }
             set { accumMgr = value; }
@@ -1056,7 +1056,7 @@ namespace fxCoreLink
 
         #region lifecycle
 
-        public PriceProcessor(Display display, Control control, IFXManager fxManager, FxUpdates fxUpdates)
+        public PriceProcessor(Display display, Control control, IFXManager fxManager, IFxUpdates fxUpdates)
         {
             this.display = display;
             this.control = control;
@@ -1217,7 +1217,7 @@ namespace fxCoreLink
 
                     foreach (PriceComponent priceComponent in priceComponentList)
                     {
-                        Accumulator accum = accumMgr.getAccum(pair, timeFrame, priceComponent);
+                        IAccumulator accum = accumMgr.getAccum(pair, timeFrame, priceComponent);
                         List<double> list = new List<double>();
                         foreach (DateTime dt in map.Keys)
                         {

@@ -10,8 +10,14 @@ namespace simulatedTrading
     {
         public Dictionary<string, List<Dictionary<string, object>>> mapClosedPosition
             = new Dictionary<string, List<Dictionary<string, object>>>();
+        ListenerMgr closedTradeListenerMgr = new ListenerMgr();
 
         public ClosedTrade() { }
+
+        public void addClosedTradeListener(ClosedTradeListener listener)
+        {
+            closedTradeListenerMgr.addListener(listener);
+        }
 
         public void createClosedPosition(string pair, DateTime openDt, DateTime closeDt, string BorS, int amount, double openPrice, double closePrice, string customId)
         {
@@ -19,17 +25,14 @@ namespace simulatedTrading
             {
                 mapClosedPosition.Add(pair, new List<Dictionary<string, object>>());
             }
-            double pointSize = 0.0001;
-            if (pair.Contains("JPY"))
-                pointSize = 0.01;
             double pips = 0;
             if (BorS == "BUY")
             {
-                pips = (closePrice - openPrice) / pointSize;
+                pips = (closePrice - openPrice) / TransactionManager.getPoiintSize(pair);
             }
             else if (BorS == "SELL")
             {
-                pips = (openPrice - closePrice) / pointSize;
+                pips = (openPrice - closePrice) / TransactionManager.getPoiintSize(pair);
             }
             mapClosedPosition[pair].Add(new Dictionary<string, object>());
             int ndx = mapClosedPosition[pair].Count - 1;
@@ -47,6 +50,7 @@ namespace simulatedTrading
         {
             double pips = 0.0;
 
+            if (mapClosedPosition.ContainsKey(pair))
             foreach (Dictionary<string, object> map in mapClosedPosition[pair])
             {
                 pips += (double) map["pips"];

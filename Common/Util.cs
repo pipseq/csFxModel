@@ -202,7 +202,21 @@ namespace Common
                 ) && hr >= 17
                 ;
         }
-#endregion
+
+        #endregion
+        #region time utility
+        public static DateTime getTimeNow()
+        {
+            return DateTime.Now;
+        }
+
+        public static string getTimeNowFormatted()
+        {
+            return getTimeNow().ToString("yyyy-MM-dd HH:mm:ss.fff");
+        }
+
+
+        #endregion
 
     }
     #region special classes
