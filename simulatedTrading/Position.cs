@@ -30,7 +30,7 @@ namespace simulatedTrading
         }
 
         int tradeId = 1;
-        public bool createPosition(string pair, DateTime dt, string BorS, int amount, double price, string customId)
+        public bool createPosition(string pair, DateTime dt, string BorS, int amount, double price, string orderId, string customId)
         {
             // TODO -- need to handle partial position closes
             // Check if this new posn closes a previous opposite posn
@@ -49,6 +49,7 @@ namespace simulatedTrading
             mapPosition[pair][ndx].Add("amount", amount);
             mapPosition[pair][ndx].Add("price", price);
             mapPosition[pair][ndx].Add("customId", customId);
+            mapPosition[pair][ndx].Add("orderId", orderId);
             mapPosition[pair][ndx].Add("datetime", dt);
             mapPosition[pair][ndx].Add("tradeId", ""+(tradeId++));
 
@@ -76,14 +77,14 @@ namespace simulatedTrading
                     if (entry == "BUY" && BorS == "SELL")
                     {
                         // TODO handle partial closes (amount)
-                        closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
+                        closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["orderId"], (string)mapData["tradeId"], (string)mapData["customId"]);
                         closed = true;
                         break;
                     }
                     else if (entry == "SELL" && BorS == "BUY")
                     {
                         // TODO handle partial closes (amount)
-                        closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
+                        closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["orderId"], (string)mapData["tradeId"], (string)mapData["customId"]);
                         closed = true;
                         break;
                     }
@@ -111,10 +112,12 @@ namespace simulatedTrading
             {
                 mapData = list[0];
                 list.RemoveAt(0);
-            }
-            foreach (Listener l in positionListenerMgr.getListeners())
-            {
-                ((PositionListener)l).positionChangeNotification(pair, mapData, StateEvent.Delete);
+                
+                foreach (Listener l in positionListenerMgr.getListeners())
+                {
+                    ((PositionListener)l).positionChangeNotification(pair, mapData, StateEvent.Delete);
+                }
+
             }
             return mapData;
         }

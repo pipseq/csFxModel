@@ -52,7 +52,12 @@ namespace simulatedTrading
 
         public void priceUpdate(string pair, DateTime dt, double price)
         {
-            getOrder().processOrders(pair, dt, price);
+            getOrder().processOrders(pair, dt, price, price); // for testing, no spread
+        }
+
+        public void priceUpdate(string pair, DateTime dt, double bid, double ask)
+        {
+            getOrder().processOrders(pair, dt, bid, ask);
         }
 
         public Order getOrder()

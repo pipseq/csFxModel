@@ -15,7 +15,7 @@ namespace simulatedTrading
         ClosedTrade closedTrade;
         Position position;
         ListenerMgr orderListenerMgr = new ListenerMgr();
-        int orderId = 1;
+        int OrderId = 1;
 
         public Order(ClosedTrade closedTrade, Position position)
         {
@@ -36,16 +36,45 @@ namespace simulatedTrading
 
         public string  createMarketOrder(string pair, DateTime dt, string BorS, int amount, double price, string customId)
         {
-            position.createPosition(pair, dt, BorS, amount, price, customId);
-            return "orderId-" + (orderId++);
+            string orderId = "orderId-" + (OrderId++);
+            position.createPosition(pair, dt, BorS, amount, price, orderId, customId);
+            return orderId;
         }
 
         public string createMarketOrder(string pair, DateTime dt, string BorS, int amount, double price, string customId, int stopPips, int limitPips)
         {
-            bool opened = position.createPosition(pair, dt, BorS, amount, price, customId);
-            if (!opened)
-                return "orderId-" + (orderId++);
-            ;
+            return createMarketOrder(pair, dt, BorS, amount, price, customId, stopPips, limitPips, false);
+        }
+        public string createMarketOrder(string pair, DateTime dt, string BorS, int amount, double price, string customId, int stopPips, int limitPips, bool trailStop)
+        {
+            string sOrderId = "orderId-" + (OrderId++);
+            bool createdPosn = position.createPosition(pair, dt, BorS, amount, price, sOrderId, customId);
+
+            Dictionary<string, object> omap = new Dictionary<string, object>();
+            omap.Add("entry", "mkt");
+            omap.Add("type", "OM");
+            omap.Add("amount", amount);
+            omap.Add("price", price);
+            omap.Add("orderId", sOrderId);
+            omap.Add("customId", customId);
+            foreach (Listener l in orderListenerMgr.getListeners())
+            {
+                ((OrderListener)l).orderChangeNotification(pair, omap, StateEvent.Create);
+            }
+
+            if (createdPosn)   // if true, creating new position
+            {
+                 // different omap values due to mkt entry order?
+            }
+            foreach (Listener l in orderListenerMgr.getListeners())
+            {
+                ((OrderListener)l).orderChangeNotification(pair, omap, StateEvent.Delete);
+            }
+            if (!createdPosn)   // if false, previous opposing posn closed by mkt order
+            {
+                return sOrderId;
+            }
+
             if (stopPips != 0)
             {
                 string slEntry = "BUY";
@@ -59,7 +88,7 @@ namespace simulatedTrading
                 {
                     entryPrice = price + (stopPips * TransactionManager.getPoiintSize(pair));
                 }
-                createEntryOrder(pair, dt, slEntry, "STOP", amount, entryPrice, customId);
+                createEntryOrder(pair, dt, slEntry, "STOP", amount, entryPrice, customId, trailStop, price);
             }
             if (limitPips != 0)
             {
@@ -76,11 +105,16 @@ namespace simulatedTrading
                 }
                 createEntryOrder(pair, dt, slEntry, "LIMIT", amount, entryPrice, customId);
             }
-            return "orderId-" + (orderId++);
+            return sOrderId;
         }
 
         public void createEntryOrder(string pair, DateTime dt, string BorS, string SorL, int amount, double price, string customId)
         {
+            createEntryOrder(pair, dt, BorS, SorL, amount, price, customId, false, 0.0);
+        }
+        public void createEntryOrder(string pair, DateTime dt, string BorS, string SorL, int amount, double price, string customId, bool trailStop, double openPrice)
+        {
+            string sOrderId = "orderId-" + (OrderId++);
             if (!mapEntryOrder.ContainsKey(pair))
             {
                 mapEntryOrder.Add(pair, new List<Dictionary<string, object>>());
@@ -89,41 +123,106 @@ namespace simulatedTrading
             int ndx = mapEntryOrder[pair].Count - 1;
             mapEntryOrder[pair][ndx].Add("entry", BorS);
             mapEntryOrder[pair][ndx].Add("stopOrLimit", SorL);
+            mapEntryOrder[pair][ndx].Add("type", SorL=="S"?"STE":"LE");
             mapEntryOrder[pair][ndx].Add("amount", amount);
             mapEntryOrder[pair][ndx].Add("price", price);
+            mapEntryOrder[pair][ndx].Add("orderId", sOrderId);
             mapEntryOrder[pair][ndx].Add("customId", customId);
-            //mapEntryOrder[pair][ndx].Add("orderId", "" + (orderId++));
+            mapEntryOrder[pair][ndx].Add("trailStop", trailStop);
+            mapEntryOrder[pair][ndx].Add("openPrice", openPrice);
+
+            foreach (Listener l in orderListenerMgr.getListeners())
+            {
+                ((OrderListener)l).orderChangeNotification(pair, mapEntryOrder[pair][ndx], StateEvent.Create);
+            }
         }
-        public void processOrders(string pair, DateTime dt, double currentPrice)
+
+        /*
+        The Two Types of trailing stops are Fixed and Dynamic:
+
+        Fixed Trailing Stops trail your stop by a fixed amount of pips as the market 
+        moves in your favor. This results in a slower trailing stop that waits for a 
+        certain number of pips to be accrued before moving that amount of pips. The 
+        minimum Fixed distance is 10 Pips.
+
+        For example,  let’s say we had an initial -50 pip stop loss that we set to 
+        trail with a fixed-step of 10. Our stop will stay at -50 until the price moves 
+        in our favor a full 10 pips. Once +10 pips of floating profit is reached on 
+        the trade, our fixed-step stop would jump from -50 to -40. Our stop would then 
+        stay at -40 until the price moved in our favor another 10 pips up to +20 pips total.
+
+        Dynamic Trailing Stops move your stop every 0.1 pips the market moves in 
+        your favor 0.1 pips. The 0.1 Pip move cannot be changed.
+
+            For example, let’s say we set our dynamic stop initially at -10 pips and 
+            then the trade moves in our favor 1 pip. Our stop would move 1 pip from 
+            -10 pips to -9 pips.
+    */
+        public void processOrders(string pair, DateTime dt, double bid, double ask)
         {
             bool found = false;
+            string orderId = "n/a";
+            double currentPrice = 0.0;
             if (mapEntryOrder.ContainsKey(pair))
-            foreach (Dictionary<string, object> map in mapEntryOrder[pair])
-            {
-                double price = (double)map["price"];
-                string entry = (string)map["entry"];
-                string stopOrLimit = (string)map["stopOrLimit"];
-                if (stopOrLimit == "LIMIT" && entry == "BUY" && currentPrice <= price)
+                foreach (Dictionary<string, object> map in mapEntryOrder[pair])
                 {
-                    found = true;
+                    string type = (string)map["type"];
+                    if (type == "OM") continue;
+                    orderId = (string)map["orderId"];
+                    double price = (double)map["price"];
+                    string entry = (string)map["entry"];
+                    string stopOrLimit = (string)map["stopOrLimit"];
+                    bool trailStop = (bool)map["trailStop"];
+                    if (stopOrLimit == "LIMIT" && entry == "BUY" && ask <= price)
+                    {
+                        found = true;
+                        currentPrice = ask;
+                    }
+                    else if (stopOrLimit == "STOP" && entry == "BUY" && ask >= price)
+                    {
+                        found = true;
+                        currentPrice = ask;
+                    }
+                    else if (stopOrLimit == "LIMIT" && entry == "SELL" && bid >= price)
+                    {
+                        found = true;
+                        currentPrice = bid;
+                    }
+                    else if (stopOrLimit == "STOP" && entry == "SELL" && bid <= price)
+                    {
+                        found = true;
+                        currentPrice = bid;
+                    }
+                    else if (stopOrLimit == "STOP" && entry == "BUY" && trailStop)
+                    {
+                        // dynamic TS recalc
+                        double openPrice = (double)map["openPrice"];
+                        double priceDiff = ask - openPrice;
+                        if (priceDiff < 0)
+                        {
+                            price += priceDiff;
+                            map["price"] = price;
+                            map["openPrice"] = ask;
+                        }
+                    }
+                    else if (stopOrLimit == "STOP" && entry == "SELL" && trailStop)
+                    {
+                        // dynamic TS recalc
+                        double openPrice = (double)map["openPrice"];
+                        double priceDiff = bid - openPrice;
+                        if (priceDiff > 0)
+                        {
+                            price += priceDiff;
+                            map["price"] = price;
+                            map["openPrice"] = bid;
+                        }
+                    }
                 }
-                else if (stopOrLimit == "STOP" && entry == "BUY" && currentPrice >= price)
-                {
-                    found = true;
-                }
-                else if (stopOrLimit == "LIMIT" && entry == "SELL" && currentPrice >= price)
-                {
-                    found = true;
-                }
-                else if (stopOrLimit == "STOP" && entry == "SELL" && currentPrice <= price)
-                {
-                    found = true;
-                }
-            }
             if (found)
             {
                 Dictionary<string, object> mapData = position.closePosition(pair);
-                closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, (string)mapData["customId"]);
+                closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, orderId, (string)mapData["tradeId"], (string)mapData["customId"]);
+
             }
         }
         public void closeOrders(string pair, string openEntry)
@@ -149,6 +248,10 @@ namespace simulatedTrading
             foreach (Dictionary<string, object> map in removeList)
             {
                 mapEntryOrder[pair].Remove(map);
+                foreach (Listener l in orderListenerMgr.getListeners())
+                {
+                    ((OrderListener)l).orderChangeNotification(pair, map, StateEvent.Delete);
+                }
             }
         }
     }

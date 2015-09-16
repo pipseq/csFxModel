@@ -85,7 +85,7 @@ namespace simulatedTrading
 
         #region same as FxUpdates, mostly
         private object posnLockObject = new object();
-        public Dictionary<string, Dictionary<string, string>> mapTrade = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, Dictionary<string, object>> mapTrade = new Dictionary<string, Dictionary<string, object>>();
         public Dictionary<string, List<string>> mapPairTrade = new Dictionary<string, List<string>>();
 
         public bool hasPositionInPair(string pair)
@@ -99,9 +99,9 @@ namespace simulatedTrading
         }
 
         // gets only the first trade (FIFO)
-        public Dictionary<string, string> getTrade(string pair)
+        public Dictionary<string, object> getTrade(string pair)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
+            Dictionary<string, object> map = new Dictionary<string, object>();
 
             lock (posnLockObject) if (hasPositionInPair(pair))
                 {
@@ -132,7 +132,7 @@ namespace simulatedTrading
         {
             if (StateEvent.Create == e)
             {
-                Dictionary<string, string> tradeMap = new Dictionary<string, string>();
+                Dictionary<string, object> tradeMap = new Dictionary<string, object>();
                 string tradeId = "1";
                 if (tradeId != null)
                     lock (posnLockObject)
@@ -152,6 +152,8 @@ namespace simulatedTrading
                         }
                         List<string> lt = mapPairTrade[pair];
                         lt.Add(tradeId);
+                        log.debug("trade opened\t{0}, amount={1}, entry={2}, orderId={3}, tradeId={4}, customId={5}, accountId={6}",
+                             pair, map["amount"], map["entry"], map["orderId"], map["tradeId"], map["customId"], "simulated");
                     }
             } else if (StateEvent.Delete == e)
             {
@@ -171,234 +173,140 @@ namespace simulatedTrading
                                 mapPairTrade.Remove(pair);
                         }
                     }
-
+                log.debug("trade closed\t{0}, amount={1}, entry={2}, tradeId={3}, openOrderID={4}, customId={5}, accountId={6}",
+                     pair, map["amount"], map["entry"], map["tradeId"], map["orderId"], map["customId"], "simulated");
             }
         }
 
         public void orderChangeNotification(string pair, Dictionary<string, object> map, StateEvent e)
         {
-            throw new NotImplementedException();
+            if (StateEvent.Create == e)
+            {
+                Dictionary<string, string> orderMap = new Dictionary<string, string>();
+                string orderId = "1";
+                if (orderId != null)
+                        //tradeMap["AccountID"] = otr.AccountID; ;
+                        orderMap["Amount"] = "" + map["amount"];
+                        //tradeMap["OfferID"] = otr.OfferID;
+                        //tradeMap["OrderID"] = otr.OpenOrderID;
+                        orderMap["BuySell"] = "" + map["entry"];
+                        orderMap["OpenRate"] = "" + map["price"];
+                        orderMap["Pair"] = pair;
+                        orderId = "" + map["orderId"];
+                log.debug("Order added\t{0}, amount={1}, entry={2}, orderId={3}, type={4}, contingencyType={5}, rate={6}, pegOffset={7}, customId={8}, accountId={9}",
+                    pair, map["amount"], map["entry"], map["orderId"], map["type"], "n/a", map["price"], "n/a", map["customId"], "simulated");
+            }
+            else if (StateEvent.Delete == e)
+            {
+                string orderId = "" + map["orderId"];
+                if (orderId != null)
+                    log.debug("Order deleted\t{0}, amount={1}, entry={2}, orderId={3}, type={4}, contingencyType={5}, rate={6}, customId={7}, accountId={8}",
+                    pair, map["amount"], map["entry"], map["orderId"], map["type"], "n/a", map["price"], map["customId"], "simulated");
+            }
+        }
+
+        public double getLast(string pair, TimeFrame timeFrame, PriceComponent priceComponent)
+        {
+            return AccumMgr.getAccum(pair, timeFrame, priceComponent).getLast();
+        }
+
+        public double getLast(string pair)
+        {
+            return getLast(pair, TimeFrame.m1, PriceComponent.BidClose);
+        }
+
+        public double getSpotRate(string pair)
+        {
+            try
+            {
+                if (pair.EndsWith("USD"))
+                {   // USD is base rate
+                    return 1.0;
+                }
+                else
+                {
+                    string baseCurrency = pair.Substring(4);
+                    if (baseCurrency == "AUD") return 1 / getLast("AUD/USD");
+                    if (baseCurrency == "EUR") return 1 / getLast("EUR/USD");
+                    if (baseCurrency == "GBP") return 1 / getLast("GBP/USD");
+                    if (baseCurrency == "CAD") return getLast("USD/CAD");
+                    if (baseCurrency == "JPY") return getLast("USD/JPY");
+                    if (baseCurrency == "NZD") return getLast("NZD/USD");
+                    if (baseCurrency == "CNH") return getLast("USD/CNH");
+                    if (baseCurrency == "CHF") return getLast("USD/CHF");
+                }
+            }
+            catch (Exception e)
+            { // key not found in AccumMgr
+              //  
+            }
+            return 0.0;
         }
 
         public void closedTradeChangeNotification(string pair, Dictionary<string, object> map, StateEvent e)
         {
-            throw new NotImplementedException();
+            if (StateEvent.Create == e)
+            {
+                Dictionary<string, string> closedTradeMap = new Dictionary<string, string>();
+                string closedTradeId = "1";
+                if (closedTradeId != null)
+                    //tradeMap["AccountID"] = otr.AccountID; ;
+                    closedTradeMap["Amount"] = "" + map["amount"];
+                //tradeMap["OfferID"] = otr.OfferID;
+                //tradeMap["OrderID"] = otr.OpenOrderID;
+                closedTradeMap["BuySell"] = "" + map["entry"];
+                closedTradeMap["OpenRate"] = "" + map["openPrice"];
+                closedTradeMap["Pair"] = pair;
+                closedTradeId = "" + map["orderId"];
+
+                string grossPL = "[" + map["grossPL"] + "]"; // init with base-currency PL
+                double pips = (double)map["pips"];
+                int amount = (int)map["amount"];
+                double basePL = pips * amount * TransactionManager.getPoiintSize(pair);
+                double rate = getSpotRate(pair);
+                if (rate != 0.0)
+                {
+                    grossPL = ""+ basePL / rate;
+                }
+
+                log.debug("Close added\t{0}, amount={1}, entry={2}, orderID={3}, tradeID={4}, grossPL={5}, pips={6}, customId={7}, accountId={8}",
+                pair, map["amount"], map["entry"], map["orderId"], map["tradeId"], grossPL, map["pips"], map["customId"], "simuated");
+            }
+            else if (StateEvent.Delete == e)
+            {
+                   // TODO--print a log entry
+
+            }
         }
 
         public bool hasOrderInPair(string pair)
         {
-            return mapPairOrder.ContainsKey(pair);
+            throw new NotImplementedException();
         }
 
         // gets only the first order (FIFO)
-        public Dictionary<string, string> getOrder(string pair)
+        public Dictionary<string, object> getOrder(string pair)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
-
-            lock (orderLockObject) if (hasOrderInPair(pair))
-                {
-                    List<string> lt = mapPairOrder[pair];
-                    map = mapOrder[lt[0]];
-                }
-            return map;
+            throw new NotImplementedException();
         }
 
         // gets the list of orders
         public List<string> getOrders(string pair)
         {
-            List<string> list = new List<string>();
-
-            lock (orderLockObject) if (hasOrderInPair(pair))
-                {
-                    List<string> l0 = mapPairOrder[pair];
-                    foreach (string oid in l0)
-                    {
-                        list.Add(oid);
-                    }
-                }
-            return list;
+            throw new NotImplementedException();
         }
 
         // gets the list of orders by types
         public List<string> getOrdersByType(string pair, string type)
         {
-            List<string> ls = new List<string>();
-            ls.Add(type);
-            return getOrdersByTypes(pair, ls);
+            throw new NotImplementedException();
         }
 
         // gets the list of orders by types
         public List<string> getOrdersByTypes(string pair, List<string> types)
         {
-            List<string> list = new List<string>();
-
-            lock (orderLockObject) if (hasOrderInPair(pair))
-                {
-                    List<string> l0 = mapPairOrder[pair];
-                    foreach (string oid in l0)
-                        if (mapOrder.ContainsKey(oid))
-                        {
-                            Dictionary<string, string> m = mapOrder[oid];
-                            string type = m["Type"];
-                            if (types.Contains(type))
-                                list.Add(oid);
-                        }
-                }
-            return list;
+            throw new NotImplementedException();
         }
-
-        private object orderLockObject = new object();
-        public Dictionary<string, Dictionary<string, string>> mapOrder = new Dictionary<string, Dictionary<string, string>>();
-        public Dictionary<string, List<string>> mapPairOrder = new Dictionary<string, List<string>>();
-
-
-        void ordersTable_RowDeleted(object sender, RowEventArgs e)
-        {
-            O2GOrderRow otr = (O2GOrderRow)e.RowData;
-            if (otr == null)
-                return;
-            IDeleteOrders delOrds = FxManager.getCurrentActiveDeleteOrders();
-            if (delOrds != null)
-            {
-                delOrds.pendingDeleteOrderNotifyComplete();
-            }
-            string orderId = otr.OrderID;
-            string offerId = otr.OfferID;
-            string pair = "n/a";
-            if (orderId != null && offerId != null)
-                lock (orderLockObject)
-                {
-                    pair = this.mapOfferIdPair[offerId];
-                    if (mapOrder.ContainsKey(orderId))
-                    {
-                        mapOrder.Remove(orderId);
-                    }
-                    if (mapPairOrder.ContainsKey(pair))
-                    {
-                        List<string> lt = mapPairOrder[pair];
-                        lt.Remove(orderId);
-                        if (lt.Count == 0)
-                            mapPairOrder.Remove(pair);
-                    }
-                }
-            log.debug(string.Format("Order deleted, {0}, orderId={1}, AccountID={2}, {3}, {4}",
-                pair, orderId, otr.AccountID, otr.BuySell, otr.Amount));
-            if (Debug)
-            {
-                log.debug("Order deleted");
-                printPairTrade();
-            }
-        }
-
-        void ordersTable_RowAdded(object sender, RowEventArgs e)
-        {
-            loadOrder((O2GOrderRow)e.RowData);
-        }
-
-        void loadOrders(List<O2GOrderRow> listOrders)
-        {
-            foreach (O2GOrderRow otr in listOrders)
-            {
-                loadOrder(otr);
-            }
-        }
-
-        void loadOrder(O2GOrderRow otr)
-        {
-            if (otr == null)
-                return;
-            string orderId = otr.OrderID;
-            string offerId = otr.OfferID;
-            string pair = this.mapOfferIdPair[offerId];
-            Dictionary<string, string> orderMap = new Dictionary<string, string>();
-            if (orderId != null && offerId != null)
-                lock (orderLockObject)
-                {
-                    orderMap["AccountID"] = otr.AccountID; ;
-                    orderMap["Amount"] = "" + otr.Amount;
-                    orderMap["OfferID"] = otr.OfferID;
-                    orderMap["RequestID"] = otr.RequestID;
-                    orderMap["BuySell"] = otr.BuySell;
-                    orderMap["PegType"] = "" + otr.PegType;
-                    orderMap["PegOffset"] = "" + otr.PegOffset;
-                    orderMap["TrailStep"] = "" + otr.TrailStep;
-                    orderMap["TradeID"] = "" + otr.TradeID;
-                    orderMap["Type"] = "" + otr.Type;
-                    orderMap["Pair"] = pair;
-                    orderMap["OrderID"] = orderId;
-                    mapOrder.Add(orderId, orderMap);
-                    if (!mapPairOrder.ContainsKey(pair))
-                    {
-                        mapPairOrder.Add(pair, new List<string>());
-                    }
-                    List<string> lt = mapPairOrder[pair];
-                    lt.Add(orderId);
-                }
-            log.debug(string.Format("Order added, {0}, orderId={1}, offerID={2}, {3}, {4}, accountId={5}",
-                pair, orderMap["OrderID"], orderMap["OfferID"], orderMap["BuySell"], orderMap["Amount"], orderMap["AccountID"]));
-            if (Debug)
-            {
-                printPairTrade();
-            }
-        }
-
-        private object closedTradesLockObject = new object();
-        public Dictionary<string, Dictionary<string, object>> mapClosedTrade = new Dictionary<string, Dictionary<string, object>>();
-
-
-        void closedTradesTable_RowDeleted(object sender, RowEventArgs e)
-        {
-            O2GOrderRow otr = (O2GOrderRow)e.RowData;
-            if (otr == null)
-                return;
-            string closedTradeId = otr.OrderID;
-            string offerId = otr.OfferID;
-            string pair = "n/a";
-            if (closedTradeId != null && offerId != null)
-                lock (closedTradesLockObject)
-                {
-                    pair = this.mapOfferIdPair[offerId];
-                    if (mapClosedTrade.ContainsKey(closedTradeId))
-                    {
-                        mapClosedTrade.Remove(closedTradeId);
-                    }
-                }
-            log.debug(string.Format("ClosedTrade deleted, {0}, closedTradeId={1}, AccountID={2}, {3}, {4}",
-                pair, closedTradeId, otr.AccountID, otr.BuySell, otr.Amount));
-        }
-
-        void closedTradesTable_RowAdded(object sender, RowEventArgs e)
-        {
-            O2GClosedTradeRow otr = (O2GClosedTradeRow)e.RowData;
-            if (otr == null)
-                return;
-            string closeOrderId = otr.CloseOrderID;
-            string offerId = otr.OfferID;
-            string pair = this.mapOfferIdPair[offerId];
-            Dictionary<string, object> closedTradeMap = new Dictionary<string, object>();
-
-            if (closeOrderId != null && offerId != null)
-                lock (closedTradesLockObject)
-                {
-                    closedTradeMap["AccountID"] = otr.AccountID; ;
-                    closedTradeMap["Amount"] = otr.Amount;
-                    closedTradeMap["OfferID"] = otr.OfferID;
-                    closedTradeMap["BuySell"] = otr.BuySell;
-                    closedTradeMap["OpenTime"] = otr.OpenTime;
-                    closedTradeMap["CloseTime"] = otr.CloseTime;
-                    closedTradeMap["OpenRate"] = otr.OpenRate;
-                    closedTradeMap["CloseRate"] = otr.CloseRate;
-                    closedTradeMap["GrossPL"] = otr.GrossPL;
-                    closedTradeMap["Commission"] = otr.Commission;
-                    closedTradeMap["TradeID"] = otr.TradeID;
-                    closedTradeMap["Pair"] = pair;
-                    closedTradeMap["OrderID"] = closeOrderId;
-                    //mapClosedTrade.Add(closeOrderId, closedTradeMap);
-                }
-            log.debug(string.Format("ClosedTrade added, {0}, closedTradeId={1}, offerID={2}, {3}, {4}, accountId={5}",
-                pair, closedTradeMap["OrderID"], closedTradeMap["OfferID"], closedTradeMap["BuySell"], closedTradeMap["Amount"], closedTradeMap["AccountID"]));
-        }
-
 
         #endregion
         int uid = 1;
@@ -437,7 +345,12 @@ namespace simulatedTrading
 
         public void enterPosition(string pair, string buySell, double last, int stopPips, int limitPips, int amount, string customId)
         {
-            TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId,stopPips,limitPips);
+            TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId, stopPips, limitPips);
+        }
+
+        public void enterPosition(string pair, string buySell, double last, int stopPips, bool trailStop, int limitPips, int amount, string customId)
+        {
+            TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId, stopPips, limitPips, trailStop);
         }
 
         public string getPairOfferId(string pair)

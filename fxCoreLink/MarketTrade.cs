@@ -22,7 +22,7 @@ namespace fxCoreLink
         double mBid = 0.0;
         double mAsk = 0.0;
         double mPointSize = 0.0;
-        int trailStepStop = 1;  // dynamic
+        int trailStepStop = 0;  // dynamic
         string cond_dist = "n/a";
 
 		public MarketTrade(O2GSession session,Display display,MailSender mailSender, string cond_dist)
@@ -33,6 +33,14 @@ namespace fxCoreLink
             this.cond_dist = cond_dist;
         }
         private Display display;
+
+
+        public string trade(string mInstrument, int mAmount, string mBuySell, int stopPips, bool trailingStop, int limitPips, double expectedPrice, string customId)
+        {
+            if (trailingStop)
+                trailStepStop = 1;
+            return trade(mInstrument, mAmount, mBuySell, stopPips, limitPips, expectedPrice, customId);
+        }
 
         // returns OrderID
         public string trade(string mInstrument, int mAmount, 

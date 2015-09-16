@@ -126,16 +126,16 @@ namespace fxCoreLink
         public string getPosition()
         {
             string posn = "";
-            Dictionary<string, string> map = Factory.FxUpdates.getTrade(pair);
+            Dictionary<string, object> map = Factory.FxUpdates.getTrade(pair);
 
             if (map.Count > 0)
             {
-                posn = map["BuySell"];
+                posn = (string)map["BuySell"];
             }
             return posn;
         }
 
-        public Dictionary<string, string> getPositionMap()
+        public Dictionary<string, object> getPositionMap()
         {
             return Factory.FxUpdates.getTrade(pair);
         }
@@ -150,6 +150,11 @@ namespace fxCoreLink
             Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, limitPips, amount, customId);
         }
 
+        public void enterPosition(string buySell, int amount, double last, int stopPips, bool trailStop, int limitPips, string customId)
+        {
+            Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, trailStop, limitPips, amount, customId);
+        }
+
         public void enterPosition(string buySell,int amount, double last, int stopPips)
         {
             Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, amount, Factory.UniqueId);
@@ -158,6 +163,11 @@ namespace fxCoreLink
         public void enterPosition(string buySell, int amount, double last, int stopPips, int limitPips)
         {
             Factory.FxUpdates.enterPosition(Pair, buySell, last, stopPips, limitPips, amount, Factory.UniqueId);
+        }
+
+        public void enterPosition(string buySell, int amount, double last, int stopPips, bool trailStop, int limitPips)
+        {
+            enterPosition(buySell, amount, last, stopPips, trailStop, limitPips, Factory.UniqueId);
         }
 
         public void closePosition()

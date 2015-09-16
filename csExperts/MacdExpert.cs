@@ -74,7 +74,7 @@ namespace csExperts
                 {
                     string entry = "SELL";
                     Factory.Display.appendLine(String.Format("Open, {0}, {1}, price={2}", entry, Pair, lastBid));
-                    enterPosition(entry, amount, lastBid, stopPips, limitPips);
+                    enterPosition(entry, amount, lastBid, stopPips, false, limitPips);
 
                 }
                 else if (macd > signal
@@ -85,7 +85,7 @@ namespace csExperts
                 {
                     string entry = "BUY";
                     Factory.Display.appendLine(String.Format("Open, {0}, {1}, price={2}", entry, Pair, lastAsk));
-                    enterPosition(entry, amount, lastAsk, stopPips, limitPips);
+                    enterPosition(entry, amount, lastAsk, stopPips, false, limitPips);
                 }
             }
             macdPrev = macd;

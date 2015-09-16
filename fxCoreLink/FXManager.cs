@@ -217,7 +217,7 @@ namespace fxCoreLink
         public IMarketTrade getMarketTrade()
         {
             getSession();
-            string cond_dist = SystemProperties["COND_DIST"];
+            string cond_dist = SystemProperties["COND_DIST_ENTRY"];
             if (marketTrade == null)
                 marketTrade = new MarketTrade(session, display, mailSender, cond_dist);
             return marketTrade;

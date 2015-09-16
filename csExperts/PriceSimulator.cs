@@ -18,7 +18,7 @@ namespace csExperts
 
         public override void priceUpdate(DateTime datetime, double bid, double ask)
         {
-            TransactionManager.getInstance().priceUpdate(Pair, datetime, bid);
+            TransactionManager.getInstance().priceUpdate(Pair, datetime, bid, ask);
         }
 
     }

@@ -18,13 +18,14 @@ namespace Common.fx
         void enterOcoEntry(string pair, int amount, int spread, int stopPips, int limitPips, double bid, double ask);
         void enterPosition(string pair, string buySell, double last, int stopPips, int amount, string customId);
         void enterPosition(string pair, string buySell, double last, int stopPips, int limitPips, int amount, string customId);
-        Dictionary<string, string> getOrder(string pair);
+        void enterPosition(string pair, string buySell, double last, int stopPips, bool trailStop, int limitPips, int amount, string customId);
+        Dictionary<string, object> getOrder(string pair);
         List<string> getOrders(string pair);
         List<string> getOrdersByType(string pair, string type);
         List<string> getOrdersByTypes(string pair, List<string> types);
         string getPairOfferId(string pair);
         double getPairPointSize(string pair);
-        Dictionary<string, string> getTrade(string pair);
+        Dictionary<string, object> getTrade(string pair);
         bool hasOrderInPair(string pair);
         bool hasPosition(string tradeId);
         bool hasPositionInPair(string pair);

@@ -85,12 +85,6 @@ namespace fxCoreLink
         private Dictionary<string, Dictionary<string, string>> mapPairParams = new Dictionary<string, Dictionary<string, string>>();
         private Dictionary<string, string> mapOfferIdPair = new Dictionary<string, string>();
 
-        //public Dictionary<string, string> MapOfferId
-        //{
-        //    get { return mapPairOfferId; }
-        //    set { mapPairOfferId = value; }
-        //}
-
         public string getPairOfferId(string pair)
         {
             return mapPairParams[pair]["OfferID"];
@@ -181,24 +175,8 @@ namespace fxCoreLink
                 if (list.Count > 0) //lock(list)
                 {
                     Dictionary<string, object> dataMap = list[0];
-                    //Console.WriteLine("" + pair + "=" + dataMap["BID"] + " @ " + dataMap["DateTime"]);
-                    //long ticks = DateTime.Now.Ticks;
                     accumMgr.add(pair, (DateTime)dataMap["DateTime"], (double)dataMap["BID"], (double)dataMap["ASK"]);
                     list.RemoveAt(0);
-                    //ticks = DateTime.Now.Ticks - ticks;
-
-                    // stats
-                    //lock (threadStats)
-                    //{
-                    //    int cnt = (int)threadStats[pair]["count"];
-                    //    threadStats[pair]["count"] = cnt + 1;
-                    //    List<long> lduration = (List<long>)threadStats[pair]["duration"];
-                    //    if (ticks > 0)
-                    //        lduration.Add(ticks);
-                    //    List<int> lqdep = (List<int>)threadStats[pair]["queueDepth"];
-                    //    if (list.Count > 0)
-                    //        lqdep.Add(list.Count);
-                    //}
                 }
                 else Thread.Sleep(100);
             }
@@ -236,7 +214,7 @@ namespace fxCoreLink
         }
 
         private object posnLockObject = new object();
-        public Dictionary<string, Dictionary<string, string>> mapTrade = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, Dictionary<string, object>> mapTrade = new Dictionary<string, Dictionary<string, object>>();
         public Dictionary<string, List<string>> mapPairTrade = new Dictionary<string, List<string>>();
 
         public bool hasPositionInPair(string pair)
@@ -250,9 +228,9 @@ namespace fxCoreLink
         }
 
         // gets only the first trade (FIFO)
-        public Dictionary<string, string> getTrade(string pair)
+        public Dictionary<string, object> getTrade(string pair)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
+            Dictionary<string, object> map = new Dictionary<string, object>();
 
             lock (posnLockObject) if (hasPositionInPair(pair))
                 {
@@ -300,13 +278,8 @@ namespace fxCoreLink
                             mapPairTrade.Remove(pair);
                     }
                 }
-            log.debug(string.Format("closed, {0}, tradeId={1}, OpenOrderID={2}, {3}, {4}",
-                pair, tradeId, otr.OpenOrderID, otr.BuySell, otr.Amount));
-            if (Debug)
-            {
-                log.debug("Posn deleted");
-                printPairTrade();
-            }
+            log.debug("trade closed\t{0}, amount={1}, entry={2}, tradeId={3}, openOrderID={4}, customId={5}, accountId={6}",
+                pair, otr.Amount, otr.BuySell, tradeId, otr.OpenOrderID, otr.OpenOrderRequestTXT, otr.AccountID);
         }
 
         void tradesTable_RowAdded(object sender, RowEventArgs e)
@@ -328,15 +301,15 @@ namespace fxCoreLink
             string tradeId = otr.TradeID;
             string offerId = otr.OfferID;
             string pair = this.mapOfferIdPair[offerId];
-            Dictionary<string, string> tradeMap = new Dictionary<string, string>();
+            Dictionary<string, object> tradeMap = new Dictionary<string, object>();
             if (tradeId != null && offerId != null) lock (posnLockObject)
                 {
                     tradeMap["AccountID"] = otr.AccountID; ;
-                    tradeMap["Amount"] = "" + otr.Amount;
+                    tradeMap["Amount"] = otr.Amount;
                     tradeMap["OfferID"] = otr.OfferID;
                     tradeMap["OrderID"] = otr.OpenOrderID;
                     tradeMap["BuySell"] = otr.BuySell;
-                    tradeMap["OpenRate"] = "" + otr.OpenRate;
+                    tradeMap["OpenRate"] = otr.OpenRate;
                     tradeMap["Pair"] = pair;
                     tradeMap["TradeID"] = tradeId;
                     mapTrade.Add(tradeId, tradeMap);
@@ -347,14 +320,9 @@ namespace fxCoreLink
                     List<string> lt = mapPairTrade[pair];
                     lt.Add(tradeId);
                 }
-            log.debug(string.Format("trade, {0}, tradeId={1}, orderId={2}, {3}, {4}, accountId={5}, time={6}",
-                pair, tradeMap["TradeID"], tradeMap["OrderID"], tradeMap["BuySell"], 
-                tradeMap["Amount"], tradeMap["AccountID"],
-                Util.getTimeNowFormatted()));
-            if (Debug)
-            {
-                printPairTrade();
-            }
+            log.debug("trade opened\t{0}, amount={1}, entry={2}, orderId={3}, tradeId={4}, customId={5}, accountId={6}",
+                pair, tradeMap["Amount"], tradeMap["BuySell"], tradeMap["OrderID"],
+                tradeMap["TradeID"], otr.OpenOrderRequestTXT, otr.AccountID);
         }
 
 
@@ -364,9 +332,9 @@ namespace fxCoreLink
         }
 
         // gets only the first order (FIFO)
-        public Dictionary<string, string> getOrder(string pair)
+        public Dictionary<string, object> getOrder(string pair)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
+            Dictionary<string, object> map = new Dictionary<string, object>();
 
             lock (orderLockObject) if (hasOrderInPair(pair))
                 {
@@ -410,8 +378,8 @@ namespace fxCoreLink
                     List<string> l0 = mapPairOrder[pair];
                     foreach (string oid in l0) if (mapOrder.ContainsKey(oid))
                     {
-                        Dictionary<string, string> m = mapOrder[oid];
-                        string type = m["Type"];
+                        Dictionary<string, object> m = mapOrder[oid];
+                        string type = (string) m["Type"];
                         if (types.Contains(type))
                             list.Add(oid);
                     }
@@ -420,7 +388,7 @@ namespace fxCoreLink
         }
 
         private object orderLockObject = new object();
-        public Dictionary<string, Dictionary<string, string>> mapOrder = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, Dictionary<string, object>> mapOrder = new Dictionary<string, Dictionary<string, object>>();
         public Dictionary<string, List<string>> mapPairOrder = new Dictionary<string, List<string>>();
 
 
@@ -452,13 +420,9 @@ namespace fxCoreLink
                             mapPairOrder.Remove(pair);
                     }
                 }
-            log.debug(string.Format("Order deleted, {0}, orderId={1}, AccountID={2}, {3}, {4}",
-                pair, orderId, otr.AccountID, otr.BuySell, otr.Amount));
-            if (Debug)
-            {
-                log.debug("Order deleted");
-                printPairTrade();
-            }
+            log.debug("Order deleted\t{0}, amount={1}, entry={2}, orderId={3}, type={4}, contingencyType={5}, rate={6}, customId={7}, accountId={8}",
+                pair, otr.Amount, otr.BuySell, orderId, otr.Type, 
+                otr.ContingencyType, otr.Rate, otr.RequestTXT, otr.AccountID);
         }
 
         void ordersTable_RowAdded(object sender, RowEventArgs e)
@@ -481,19 +445,19 @@ namespace fxCoreLink
             string orderId = otr.OrderID;
             string offerId = otr.OfferID;
             string pair = this.mapOfferIdPair[offerId];
-            Dictionary<string, string> orderMap = new Dictionary<string, string>();
+            Dictionary<string, object> orderMap = new Dictionary<string, object>();
             if (orderId != null && offerId != null) lock (orderLockObject)
                 {
                     orderMap["AccountID"] = otr.AccountID; ;
-                    orderMap["Amount"] = "" + otr.Amount;
+                    orderMap["Amount"] = otr.Amount;
                     orderMap["OfferID"] = otr.OfferID;
                     orderMap["RequestID"] = otr.RequestID;
                     orderMap["BuySell"] = otr.BuySell;
-                    orderMap["PegType"] = "" + otr.PegType;
-                    orderMap["PegOffset"] = "" + otr.PegOffset;
-                    orderMap["TrailStep"] = "" + otr.TrailStep;
-                    orderMap["TradeID"] = "" + otr.TradeID;
-                    orderMap["Type"] = "" + otr.Type;
+                    orderMap["PegType"] = otr.PegType;
+                    orderMap["PegOffset"] = otr.PegOffset;
+                    orderMap["TrailStep"] = otr.TrailStep;
+                    orderMap["TradeID"] = otr.TradeID;
+                    orderMap["Type"] = otr.Type;
                     orderMap["Pair"] = pair;
                     orderMap["OrderID"] = orderId;
                     mapOrder.Add(orderId, orderMap);
@@ -504,18 +468,15 @@ namespace fxCoreLink
                     List<string> lt = mapPairOrder[pair];
                     lt.Add(orderId);
                 }
-            log.debug(string.Format("Order added, {0}, orderId={1}, offerID={2}, {3}, {4}, accountId={5}",
-                pair, orderMap["OrderID"], orderMap["OfferID"], orderMap["BuySell"], orderMap["Amount"], orderMap["AccountID"]));
-            if (Debug)
-            {
-                printPairTrade();
-            }
+            log.debug("Order added\t{0}, amount={1}, entry={2}, orderId={3}, type={4}, contingencyType={5}, rate={6}, pegOffset={7}, customId={8}, accountId={9}",
+                pair, orderMap["Amount"], orderMap["BuySell"], orderMap["OrderID"], otr.Type, 
+                otr.ContingencyType, otr.Rate, otr.PegOffset, otr.RequestTXT, otr.AccountID);
         }
 
         private object closedTradesLockObject = new object();
         public Dictionary<string, Dictionary<string, object>> mapClosedTrade = new Dictionary<string, Dictionary<string, object>>();
 
-
+        // TODO--not sure when this occurs
         void closedTradesTable_RowDeleted(object sender, RowEventArgs e)
         {
             O2GOrderRow otr = (O2GOrderRow)e.RowData;
@@ -536,6 +497,7 @@ namespace fxCoreLink
                 pair, closedTradeId, otr.AccountID, otr.BuySell, otr.Amount));
         }
 
+        // without the delete, this map accumulates forever!?
         void closedTradesTable_RowAdded(object sender, RowEventArgs e)
         {
             O2GClosedTradeRow otr = (O2GClosedTradeRow)e.RowData;
@@ -545,6 +507,16 @@ namespace fxCoreLink
             string offerId = otr.OfferID;
             string pair = this.mapOfferIdPair[offerId];
             Dictionary<string, object> closedTradeMap = new Dictionary<string, object>();
+            double pips = 0;
+
+            if (otr.BuySell == "B")
+            {
+                pips = (otr.CloseRate - otr.OpenRate) / getPairPointSize(pair);
+            }
+            else if (otr.BuySell == "S")
+            {
+                pips = (otr.OpenRate - otr.CloseRate) / getPairPointSize(pair);
+            }
 
             if (closeOrderId != null && offerId != null) lock (closedTradesLockObject)
                 {
@@ -557,14 +529,15 @@ namespace fxCoreLink
                     closedTradeMap["OpenRate"] = otr.OpenRate;
                     closedTradeMap["CloseRate"] = otr.CloseRate;
                     closedTradeMap["GrossPL"] = otr.GrossPL;
+                    closedTradeMap["pips"] = pips;
                     closedTradeMap["Commission"] = otr.Commission;
                     closedTradeMap["TradeID"] = otr.TradeID;
                     closedTradeMap["Pair"] = pair;
                     closedTradeMap["OrderID"] = closeOrderId;
-                    //mapClosedTrade.Add(closeOrderId, closedTradeMap);
                 }
-            log.debug(string.Format("ClosedTrade added, {0}, closedTradeId={1}, offerID={2}, {3}, {4}, accountId={5}",
-                pair, closedTradeMap["OrderID"], closedTradeMap["OfferID"], closedTradeMap["BuySell"], closedTradeMap["Amount"], closedTradeMap["AccountID"]));
+            log.debug("Close added\t{0}, amount={1}, entry={2}, orderID={3}, tradeID={4}, grossPL={5}, pips={6}, customId={7}, accountId={8}",
+                pair, closedTradeMap["Amount"], closedTradeMap["BuySell"], closedTradeMap["OrderID"], 
+                closedTradeMap["TradeID"], closedTradeMap["GrossPL"], closedTradeMap["pips"], otr.OpenOrderRequestTXT, closedTradeMap["AccountID"]);
         }
 
 
@@ -651,12 +624,18 @@ namespace fxCoreLink
 
         public void enterPosition(string pair, string buySell, double last, int stopPips, int limitPips, int amount, string customId)
         {
+            enterPosition(pair, buySell, last, stopPips, false, limitPips, amount, customId);
+        }
+
+        public void enterPosition(string pair, string buySell, double last, int stopPips, bool trailStop, int limitPips, int amount, string customId)
+        {
 
             Dictionary<string, string> map = new Dictionary<string, string>();
             map.Add("Pair", pair);
             map.Add("BuySell", buySell);
             map.Add("Last", "" + last);
             map.Add("StopPips", "" + stopPips);
+            map.Add("TrailStop", "" + trailStop);
             map.Add("LimitPips", "" + limitPips);
             map.Add("Amount", "" + amount);
             map.Add("CustomId", customId);
@@ -693,6 +672,8 @@ namespace fxCoreLink
                         string customId = map["CustomId"];
                         string sStopPips = map["StopPips"];
                         int stopPips = int.Parse(sStopPips);
+                        string sTrailStop = map["TrailStop"];
+                        bool trailStop = bool.Parse(sTrailStop);
                         string sAmount = map["Amount"];
                         int amount = int.Parse(sAmount);
                         string sLimitPips = map["LimitPips"];
@@ -712,6 +693,7 @@ namespace fxCoreLink
                             string offerId = FxManager.getMarketTrade() // TODO - manage offerId returned
                                 .trade(pair, amount, sBuySell,
                                 stopPips,
+                                trailStop,
                                 limitPips,
                                 last,
                                 customId);
@@ -734,12 +716,12 @@ namespace fxCoreLink
             co.CreateEntryOrder(accountId, pair, offerId, dRate, iAmount, sBuySell, tradeId);
         }
 
-        List<Dictionary<string, string>> closeQueue = new List<Dictionary<string, string>>();
+        List<Dictionary<string, object>> closeQueue = new List<Dictionary<string, object>>();
         Thread closeThread;
         public void closePosition(string pair)
         {
 
-            Dictionary<string, string> map = getTrade(pair);
+            Dictionary<string, object> map = getTrade(pair);
             lock (closeQueue)   // potential race across pair-threads
             {
                 closeQueue.Add(map);
@@ -761,7 +743,7 @@ namespace fxCoreLink
             {
                 if (closeQueue.Count > 0)
                 {
-                    Dictionary<string, string> map = new Dictionary<string, string>();
+                    Dictionary<string, object> map = new Dictionary<string, object>();
                     lock (closeQueue)   // potential race across pair-threads
                     {
                         map = closeQueue[0];
@@ -769,18 +751,18 @@ namespace fxCoreLink
                     }
                     if (map.Count > 0)
                     {
-                        string pair = map["Pair"];
-                        Dictionary<string, string> omap = getOrder(pair);
+                        string pair = (string)map["Pair"];
+                        Dictionary<string, object> omap = getOrder(pair);
                         string sOrderID = null;
                         if (omap.ContainsKey("OrderID"))    // may not exist, some SL orders get lost!!
-                            sOrderID = omap["OrderID"];
+                            sOrderID = (string)omap["OrderID"];
 
-                        string offerId = map["OfferID"];
-                        string tradeId = map["TradeID"];
-                        string accountId = map["AccountID"];
-                        string sAmount = map["Amount"];
+                        string offerId = (string)map["OfferID"];
+                        string tradeId = (string)map["TradeID"];
+                        string accountId = (string)map["AccountID"];
+                        string sAmount = (string)map["Amount"];
                         int amount = int.Parse(sAmount);    // does this make sense to return?
-                        string buySell = map["BuySell"];
+                        string buySell = (string)map["BuySell"];
                         string sBuySell = "";
                         if (buySell.Equals("B"))      // switch "BuySell" 
                             sBuySell = "S";           // (if the position in "Buy", close position will be "Sell" and vice versa) 
