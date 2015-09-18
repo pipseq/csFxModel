@@ -370,7 +370,7 @@ namespace simulatedTrading
 
         public void setCanProcess(bool val)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }

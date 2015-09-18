@@ -721,6 +721,18 @@ namespace fxCoreLink
             return list;
         }
 
+        public TimeFrame getMaxTimeFrame()
+        {
+            TimeFrame maxtf = TimeFrame.m1;
+            List<TimeFrame> ltf = getSubscribersTimeFrames();
+            foreach (TimeFrame tf in ltf)
+            {
+                if (tf > maxtf)
+                    maxtf = tf;
+            }
+            return maxtf;
+        }
+
         // called by start()
         public List<string> getSubscribersPairs()
         {
@@ -905,7 +917,8 @@ namespace fxCoreLink
                 using (StreamWriter sw = new StreamWriter(file, append))
                 {
                     sw.WriteLine(string.Format(
-                        "{0}\t{1}\t{2}", DateTime.Now, pair, timeFrameMap[timeframe], "timeUpdate"));
+                        "{0}\t{1}\t{2}", DateTime.Now, pair, timeFrameMap[TimeFrame.m1], "timeUpdate")); // journal only at m1
+                    //"{0}\t{1}\t{2}", DateTime.Now, pair, timeFrameMap[timeframe], "timeUpdate"));
                 }
         }
         private void journal(string command)
@@ -960,7 +973,7 @@ namespace fxCoreLink
                     if (pairs.Contains(pr))
                     {
                         roll(pr, dt);
-                        periodicUpdate(pr, timeframe);
+                        periodicUpdateMax(pr, timeframe);
                     }
                     break;
 
@@ -981,6 +994,31 @@ namespace fxCoreLink
             }
 
             return true;
+        }
+
+        int historyCounter = 1;
+        // replay periodic updates accumulating and
+        // signaling timeframes up to a max level
+        public void periodicUpdateMax(string pair, TimeFrame timeframe)
+        {
+            TimeFrame maxtf = getMaxTimeFrame();
+
+            if (maxtf == TimeFrame.D1 && 0 == historyCounter % 24 * 60)
+                periodicUpdate(pair, TimeFrame.D1);
+            else if (maxtf == TimeFrame.H4 && 0 == historyCounter % 4* 60)
+                periodicUpdate(pair, TimeFrame.H4);
+            else if (maxtf == TimeFrame.H1 && 0 == historyCounter % 60)
+                periodicUpdate(pair, TimeFrame.H1);
+            else if (maxtf == TimeFrame.m30 && 0 == historyCounter % 30)
+                periodicUpdate(pair, TimeFrame.m30);
+            else if (maxtf == TimeFrame.m15 && 0 == historyCounter % 15)
+                periodicUpdate(pair, TimeFrame.m15);
+            else if (maxtf == TimeFrame.m5 && 0 == historyCounter % 5)
+                periodicUpdate(pair, TimeFrame.m5);
+            else
+                periodicUpdate(pair, timeframe);
+
+            historyCounter++;
         }
 
         // convenience place to stop 
