@@ -82,7 +82,7 @@ namespace fxCoreLink
         Logger log = Logger.LogManager("AccumulatorMgr");
         Dictionary<string, Dictionary<TimeFrame, Dictionary<PriceComponent, Accumulator>>> pairTimePriceMap
             = new Dictionary<string, Dictionary<TimeFrame, Dictionary<PriceComponent, Accumulator>>>();
-        Dictionary<string, List<double>> dataMap = new Dictionary<string, List<double>>();
+        Dictionary<string, Dictionary<string, List<double>>> dataMap = new Dictionary<string, Dictionary<string, List<double>>>();
         List<PriceListener> priceListeners = new List<PriceListener>();
 
         public AccumulatorMgr()
@@ -171,10 +171,16 @@ namespace fxCoreLink
                 {
                     if (!dataMap.ContainsKey(pair))
                     {
-                        dataMap.Add(pair, new List<double>());
+                        dataMap.Add(pair, new Dictionary<string, List<double>>());
                     }
-                    List<double> ld = dataMap[pair];
-                    ld.Add(bid);
+                    if (!dataMap[pair].ContainsKey("bid"))
+                        dataMap[pair].Add("bid", new List<double>());
+                    if (!dataMap[pair].ContainsKey("ask"))
+                        dataMap[pair].Add("ask", new List<double>());
+                    List<double> ldb = dataMap[pair]["bid"];
+                    List<double> lda = dataMap[pair]["ask"];
+                    ldb.Add(bid);
+                    lda.Add(ask);
                 }
             }
         }
@@ -211,98 +217,163 @@ namespace fxCoreLink
         }
 
         public void roll(string pair, DateTime now)
-        { 
-            double last = Double.NaN;
-            double high = Double.NaN;
-            double low = Double.NaN;
+        {
+            double lastBid = Double.NaN;
+            double highBid = Double.NaN;
+            double lowBid = Double.NaN;
+            double openBid = Double.NaN;
+            double lastAsk = Double.NaN;
+            double highAsk = Double.NaN;
+            double lowAsk = Double.NaN;
+            double openAsk = Double.NaN;
             lock (lockObject)
             {
-                if (dataMap.ContainsKey(pair))
+                if (dataMap.ContainsKey(pair)
+                    && debug)
                 {
                     StringBuilder sb = new StringBuilder();
-                    foreach (Double d in dataMap[pair])
+                    foreach (Double d in dataMap[pair]["bid"])
                     {
                         sb.Append("" + d + ",");
                     }
-                    if (debug) log.debug("dataMap(" + dataMap[pair].Count + ")=" + pair + ":" + sb.ToString());
+                    log.debug("bid dataMap(" + dataMap[pair].Count + ")=" + pair + ":" + sb.ToString());
+                    foreach (Double d in dataMap[pair]["ask"])
+                    {
+                        sb.Append("" + d + ",");
+                    }
+                    log.debug("ask dataMap(" + dataMap[pair].Count + ")=" + pair + ":" + sb.ToString());
                 }
                 if (dataMap.ContainsKey(pair)
-                    && dataMap[pair].Count > 0)
+                    && dataMap[pair]["bid"].Count > 0)
                 {
-                    last = dataMap[pair].Last();
-                    high = dataMap[pair].Max();
-                    low = dataMap[pair].Min();
+                    lastBid = dataMap[pair]["bid"].Last();
+                    highBid = dataMap[pair]["bid"].Max();
+                    lowBid = dataMap[pair]["bid"].Min();
+                    openBid = dataMap[pair]["bid"].First();
 
-                    dataMap[pair] = new List<double>();
+                    lastAsk = dataMap[pair]["ask"].Last();
+                    highAsk = dataMap[pair]["ask"].Max();
+                    lowAsk = dataMap[pair]["ask"].Min();
+                    openAsk = dataMap[pair]["ask"].First();
+
+                    dataMap[pair]["bid"] = new List<double>();
+                    dataMap[pair]["ask"] = new List<double>();
                 }
             }
             foreach (TimeFrame timeFrame in ExpertFactory.timeFrameMap.Keys)
                 if (PriceProcessor.isEvenIncrement(timeFrame, now))
                 {
-                    IAccumulator accumLa = getAccum(pair, timeFrame, PriceComponent.BidClose);
-                    IAccumulator accumHi = getAccum(pair, timeFrame, PriceComponent.BidHigh);
-                    IAccumulator accumLo = getAccum(pair, timeFrame, PriceComponent.BidLow);
-                    if (!Double.IsNaN(last))
-                        accumLa.addLast(last);
+                    IAccumulator accumBidLa = getAccum(pair, timeFrame, PriceComponent.BidClose);
+                    IAccumulator accumBidHi = getAccum(pair, timeFrame, PriceComponent.BidHigh);
+                    IAccumulator accumBidLo = getAccum(pair, timeFrame, PriceComponent.BidLow);
+                    IAccumulator accumBidOp = getAccum(pair, timeFrame, PriceComponent.BidOpen);
+                    IAccumulator accumAskLa = getAccum(pair, timeFrame, PriceComponent.AskClose);
+                    IAccumulator accumAskHi = getAccum(pair, timeFrame, PriceComponent.AskHigh);
+                    IAccumulator accumAskLo = getAccum(pair, timeFrame, PriceComponent.AskLow);
+                    IAccumulator accumAskOp = getAccum(pair, timeFrame, PriceComponent.AskOpen);
+
+                    if (!Double.IsNaN(lastBid))
+                        accumBidLa.addLast(lastBid);
+                    if (!Double.IsNaN(openBid))
+                        accumBidOp.addLast(openBid); // TODO - fix
+                    if (!Double.IsNaN(lastAsk))
+                        accumAskLa.addLast(lastAsk);
+                    if (!Double.IsNaN(openAsk))
+                        accumAskOp.addLast(openAsk); // TODO - fix
+
                     if (timeFrame == TimeFrame.m1)
                     {
-                        if (!Double.IsNaN(high))
-                            accumHi.addLast(high);
-                        if (!Double.IsNaN(low))
-                            accumLo.addLast(low);
+                        if (!Double.IsNaN(highBid))
+                            accumBidHi.addLast(highBid);
+                        if (!Double.IsNaN(lowBid))
+                            accumBidLo.addLast(lowBid);
+                        if (!Double.IsNaN(highAsk))
+                            accumAskHi.addLast(highAsk);
+                        if (!Double.IsNaN(lowAsk))
+                            accumAskLo.addLast(lowAsk);
                     }
                     else if (timeFrame == TimeFrame.m5)
                     {
                         int offset = 5;
-                        rollDetail(pair, offset, TimeFrame.m1, accumHi, accumLo);
+                        rollDetail(pair, offset, TimeFrame.m1, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.m1, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
                     else if (timeFrame == TimeFrame.m15)
                     {
                         int offset = 15;
-                        rollDetail(pair, offset, TimeFrame.m1, accumHi, accumLo);
+                        rollDetail(pair, offset, TimeFrame.m1, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.m1, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
                     else if (timeFrame == TimeFrame.m30)
                     {
                         int offset = 30;
-                        rollDetail(pair, offset, TimeFrame.m1, accumHi, accumLo);
+                        rollDetail(pair, offset, TimeFrame.m1, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.m1, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
                     else if (timeFrame == TimeFrame.H1)
                     {
                         int offset = 12;
-                        rollDetail(pair, offset, TimeFrame.m5, accumHi, accumLo);
+                        rollDetail(pair, offset, TimeFrame.m5, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.m5, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
                     else if (timeFrame == TimeFrame.H4)
                     {
                         int offset = 8;
-                        rollDetail(pair, offset, TimeFrame.m30, accumHi, accumLo);
+                        rollDetail(pair, offset, TimeFrame.m30, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.m30, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
                     else if (timeFrame == TimeFrame.D1)
                     {
                         int offset = 24;
-                        rollDetail(pair, offset, TimeFrame.H1,  accumHi,  accumLo);
+                        rollDetail(pair, offset, TimeFrame.H1, accumBidHi, accumBidLo, PriceComponent.BidHigh, PriceComponent.BidLow);
+                        rollDetail(pair, offset, TimeFrame.H1, accumAskHi, accumAskLo, PriceComponent.AskHigh, PriceComponent.AskLow);
                     }
-                    if (Debug)
-                    {
-                        log.debug("roll last:" + pair + ":" + ExpertFactory.timeFrameMap[timeFrame]);
-                        StringBuilder sb = new StringBuilder();
-                        writeShortenedList(accumLa.getList(),sb);
-                        log.debug("accumLast(" + accumLa.getList().Count + ")=" + sb.ToString());
-                    }
-                    if (Debug)
-                    {
-                        log.debug("roll high:" + pair + ":" + ExpertFactory.timeFrameMap[timeFrame]);
-                        StringBuilder sb = new StringBuilder();
-                        writeShortenedList(accumHi.getList(), sb);
-                        log.debug("accumHigh(" + accumHi.getList().Count + ")=" + sb.ToString());
-                    }
-                    if (Debug)
-                    {
-                        log.debug("roll low:" + pair + ":" + ExpertFactory.timeFrameMap[timeFrame]);
-                        StringBuilder sb = new StringBuilder();
-                        writeShortenedList(accumLo.getList(), sb);
-                        log.debug("accumLow(" + accumLo.getList().Count + ")=" + sb.ToString());
-                    }
+                    debugList("bid close", pair, timeFrame, accumBidLa);
+                    debugList("bid high", pair, timeFrame, accumBidHi);
+                    debugList("bid low", pair, timeFrame, accumBidLo);
+                    debugList("bid open", pair, timeFrame, accumBidOp);
+                    debugList("ask close", pair, timeFrame, accumAskLa);
+                    debugList("ask high", pair, timeFrame, accumAskHi);
+                    debugList("ask low", pair, timeFrame, accumAskLo);
+                    debugList("ask open", pair, timeFrame, accumAskOp);
+
             }
+        }
+
+        private void rollDetail(string pair, int offset, TimeFrame baseTimeFrame, 
+            IAccumulator accumHi, IAccumulator accumLo, PriceComponent highComp, PriceComponent lowComp)
+        {
+            double high = Double.NaN;
+            double low = Double.NaN;
+
+            IAccumulator accumHi2 = getAccum(pair, baseTimeFrame, highComp);
+            IAccumulator accumLo2 = getAccum(pair, baseTimeFrame, lowComp);
+
+            List<double> ldh = accumHi2.getList();
+            if (ldh.Count >= offset)
+            {
+                List<double> ldh2 = ldh.GetRange(ldh.Count - offset, offset);
+                high = ldh2.Max();
+            }
+            List<double> ldl = accumLo2.getList();
+            if (ldl.Count >= offset)
+            {
+                List<double> ldl2 = ldh.GetRange(ldh.Count - offset, offset);
+                low = ldl2.Min();
+            }
+            if (!Double.IsNaN(high))
+                accumHi.addLast(high);
+            if (!Double.IsNaN(low))
+                accumLo.addLast(low);
+        }
+
+        private void debugList(string title, string pair, TimeFrame timeFrame, IAccumulator accum)
+        {
+            if (!debug) return;
+            log.debug("roll "+title+":" + pair + ":" + ExpertFactory.timeFrameMap[timeFrame]);
+            StringBuilder sb = new StringBuilder();
+            writeShortenedList(accum.getList(), sb);
+            log.debug(title + "(" + accum.getList().Count + ")=" + sb.ToString());
         }
 
         private void writeShortenedList(List<double> list, StringBuilder sb)
@@ -329,32 +400,6 @@ namespace fxCoreLink
                 }
 
             }
-        }
-
-        private void rollDetail(string pair, int offset, TimeFrame baseTimeFrame, IAccumulator accumHi, IAccumulator accumLo)
-        {
-            double high = Double.NaN;
-            double low = Double.NaN;
-
-            IAccumulator accumHi2 = getAccum(pair, baseTimeFrame, PriceComponent.BidHigh);
-            IAccumulator accumLo2 = getAccum(pair, baseTimeFrame, PriceComponent.BidLow);
-
-            List<double> ldh = accumHi2.getList();
-            if (ldh.Count >= offset)
-            {
-                List<double> ldh2 = ldh.GetRange(ldh.Count - offset, offset);
-                high = ldh2.Max();
-            }
-            List<double> ldl = accumLo2.getList();
-            if (ldl.Count >= offset)
-            {
-                List<double> ldl2 = ldh.GetRange(ldh.Count - offset, offset);
-                low = ldl2.Min();
-            }
-            if (!Double.IsNaN(high))
-                accumHi.addLast(high);
-            if (!Double.IsNaN(low))
-                accumLo.addLast(low);
         }
 
         private string snapshot=null;

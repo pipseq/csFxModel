@@ -18,14 +18,17 @@ namespace fxCoreLink
         bool mHasAccount = false;
         bool mHasOffer = true;
         double pegStopOffset = 0.0;
+        double pegLimitOffset = 0.0;
         double mRateLimit = 0.0;
         double mBid = 0.0;
         double mAsk = 0.0;
         double mPointSize = 0.0;
         int trailStepStop = 0;  // dynamic
         string cond_dist = "n/a";
+        double condDistEntryLimit = 0.0;
+        double condDistLimitTrade = 0.0;
 
-		public MarketTrade(O2GSession session,Display display,MailSender mailSender, string cond_dist)
+        public MarketTrade(O2GSession session, Display display, MailSender mailSender, string cond_dist)
         {
             this.mSession = session;
             this.display = display;
@@ -43,11 +46,11 @@ namespace fxCoreLink
         }
 
         // returns OrderID
-        public string trade(string mInstrument, int mAmount, 
+        public string trade(string mInstrument, int mAmount,
             string mBuySell, int stopPips, int limitPips, double expectedPrice, string customId)
         {
-            string returnId= null;
-            string mOrderType= "OM";
+            string returnId = null;
+            string mOrderType = "OM";
             O2GRequestFactory requestFactory = null;
             //int entryPips = 0;
 
@@ -77,12 +80,15 @@ namespace fxCoreLink
                         valueMap.setString(O2GRequestParamsEnum.PegTypeStop, Constants.Peg.FromClose);
                         valueMap.setDouble(O2GRequestParamsEnum.PegOffsetStop, pegStopOffset);
                         if (limitPips != 0)
-                            valueMap.setDouble(O2GRequestParamsEnum.RateLimit, mRateLimit);
+                        {
+                            valueMap.setDouble(O2GRequestParamsEnum.PegOffsetLimit, pegLimitOffset);
+                            valueMap.setString(O2GRequestParamsEnum.PegTypeLimit, Constants.Peg.FromClose);
+                        }
                         // # of pips in notation of instrument (i.e. 0.005 for 5 pips on USD/JPY)
                         valueMap.setInt(O2GRequestParamsEnum.TrailStepStop, trailStepStop);
                         //valueMap.setDouble(O2GRequestParamsEnum.TrailStep, 0.1);
-                        log.debug(string.Format("Market order request, {0} {1}, stop={2}, limPips={3}, expPrice={4}, customId={5}, cond_dist={6}",
-                            mInstrument,mBuySell,pegStopOffset, limitPips, expectedPrice, customId, cond_dist));
+                        log.debug(string.Format("Market order request, {0} {1}, stop={2}, limPips={3}, limitPrice={7}, expPrice={4}, customId={5}, cond_dist={6}, condDistEntryLimit={8}, condDistLimitTrade={9}",
+                            mInstrument, mBuySell, pegStopOffset, limitPips, expectedPrice, customId, cond_dist, mRateLimit, condDistEntryLimit, condDistLimitTrade));
                         O2GRequest request = requestFactory.createOrderRequest(valueMap);
                         CtrlTimer.getInstance().startTimer("MarketRequest");
                         mSession.sendRequest(request);
@@ -92,7 +98,7 @@ namespace fxCoreLink
                         StringBuilder sb = new StringBuilder();
                         if (!responseListener.Error)
                         {
-                            sb.Append("Created mkt order, " + mInstrument );
+                            sb.Append("Created mkt order, " + mInstrument);
                             sb.Append(", orderID=" + responseListener.OrderId);
                             sb.Append(", customID=" + customId);
                             //orderId = responseListener.OrderId;
@@ -114,8 +120,8 @@ namespace fxCoreLink
             }
             catch (Exception e)
             {
-                log.debug("Exception: {0}", 
-                    e.ToString()+"; "+ 
+                log.debug("Exception: {0}",
+                    e.ToString() + "; " +
                 requestFactory.getLastError());
             }
             finally
@@ -126,7 +132,7 @@ namespace fxCoreLink
         }
 
         // Get current prices and calculate order price
-        private void GetOfferRate(O2GSession session, string sInstrument, string mBuySell, string mOrderType, 
+        private void GetOfferRate(O2GSession session, string sInstrument, string mBuySell, string mOrderType,
             int stopPips, int limitPips)
         {
             double dBid = 0.0;
@@ -135,6 +141,10 @@ namespace fxCoreLink
             try
             {
                 O2GLoginRules loginRules = session.getLoginRules();
+                O2GTradingSettingsProvider tsp = loginRules.getTradingSettingsProvider();
+                condDistEntryLimit = tsp.getCondDistEntryLimit(sInstrument);
+                condDistLimitTrade = tsp.getCondDistLimitForTrade(sInstrument);
+
                 if (loginRules != null && loginRules.isTableLoadedByDefault(O2GTableType.Offers))
                 {
                     O2GResponse offersResponse = loginRules.getTableRefreshResponse(O2GTableType.Offers);
@@ -167,24 +177,26 @@ namespace fxCoreLink
                             mAsk = dAsk;
                             mPointSize = dPointSize;
 
+                            // limit -- The offset must be negative for a sell position and positive for a buy position.
                             if (mBuySell == Constants.Buy)
                             {
-                                mRateLimit = dBid + limitPips * dPointSize;
+                                //mRateLimit = dBid + limitPips * dPointSize;
                                 pegStopOffset = -stopPips;
+                                pegLimitOffset = limitPips;
                             }
-                            else // Sell
+                            else if (mBuySell == Constants.Sell)
                             {
-                                mRateLimit = dAsk - limitPips * dPointSize;
+                                //mRateLimit = dAsk - limitPips * dPointSize;
                                 pegStopOffset = stopPips;
+                                pegLimitOffset = -limitPips;
                             }
-
                             mHasOffer = true;
                             break;
                         }
                     }
-                    if (!mHasOffer)
-                        log.debug("You specified invalid instrument. No action will be taken.");
                 }
+                if (!mHasOffer)
+                    log.debug("You specified invalid instrument. No action will be taken.");
             }
             catch (Exception e)
             {

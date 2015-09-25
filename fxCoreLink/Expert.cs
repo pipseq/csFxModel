@@ -1255,6 +1255,11 @@ namespace fxCoreLink
             log.debug("updatePriceHistory() start");
             int bars = Control.getIntProperty("priceHistory.bars", 40);
 
+            // TODO--DataMgt accumulator strategy requires min of 30 elements/accumulator
+            // Review "addLast()" list sizes can't grow, assumed constant size, data passes through
+            // In rollDetail(), largest offset is 30, requiring min list size of 30
+            if (bars < 30) bars = 30;
+
             foreach (TimeFrame timeFrame in timeFrames)
             {
                 IHistoricPrices prices = fxManager.getHistoricPrices();

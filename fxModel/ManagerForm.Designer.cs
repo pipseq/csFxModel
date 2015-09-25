@@ -333,7 +333,7 @@
             this.buttonCsRun.BackColor = System.Drawing.SystemColors.Control;
             this.buttonCsRun.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonCsRun.ForeColor = System.Drawing.Color.DarkOliveGreen;
-            this.buttonCsRun.Location = new System.Drawing.Point(0, 83);
+            this.buttonCsRun.Location = new System.Drawing.Point(6, 83);
             this.buttonCsRun.Name = "buttonCsRun";
             this.buttonCsRun.Size = new System.Drawing.Size(75, 26);
             this.buttonCsRun.TabIndex = 75;
