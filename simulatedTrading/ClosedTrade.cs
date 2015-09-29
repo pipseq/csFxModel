@@ -54,17 +54,38 @@ namespace simulatedTrading
             }
         }
 
-        public double getClosedPositionGross(string pair)
+        public Dictionary<string, object> getClosedPositionGross(string pair)
         {
+            Dictionary<string, object> mapResult = new Dictionary<string, object>();
             double pips = 0.0;
+            double pipsWin = 0.0;
+            double pipsLoss = 0.0;
+            int cnt = 0;
+            int cntWin = 0;
+            int cntLoss = 0;
 
             if (mapClosedPosition.ContainsKey(pair))
-            foreach (Dictionary<string, object> map in mapClosedPosition[pair])
-            {
-                pips += (double) map["pips"];
-            }
-
-            return pips;
+                foreach (Dictionary<string, object> map in mapClosedPosition[pair])
+                {
+                    double val = (double)map["pips"];
+                    pips += val;
+                    if (val > 0) {
+                        cntWin++;
+                        pipsWin += val;
+                    }
+                    if (val < 0) {
+                        cntLoss++;
+                        pipsLoss += val;
+                    }
+                    cnt++;
+                }
+            mapResult.Add("pips", pips);
+            mapResult.Add("pipsWin", pipsWin);
+            mapResult.Add("pipsLoss", pipsLoss);
+            mapResult.Add("count", cnt);
+            mapResult.Add("wins", cntWin);
+            mapResult.Add("losses", cntLoss);
+            return mapResult;
         }
     }
 }

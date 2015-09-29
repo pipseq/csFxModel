@@ -245,13 +245,47 @@ namespace fxModel
                 this.Invoke(new serviceGUIDelegate2(runStatusDelegate), false);
                 List<string> selectedPairs = new List<string>();
                 selectedPairs.AddRange(Property.getInstance().getDelimitedListProperty("selectedPairs"));
-
+                double totalPips = 0.0;
+                double totalWin = 0.0;
+                double totalLoss = 0.0;
+                int count = 0;
+                int countWin = 0;
+                int countLoss = 0;
                 foreach (string pair in selectedPairs) {
-                    double pips = TransactionManager.getInstance().getClosedTrade().getClosedPositionGross(pair);
-                    Console.WriteLine("Gross for {0} is {1}", pair, pips);
-                    appendLine("{0}={1}", pair, pips);
-                    log.debug("Gross for {0}={1}", pair, pips);
+                    Dictionary < string, object> mapResult = TransactionManager.getInstance().getClosedTrade().getClosedPositionGross(pair);
+                    double pips = (double)mapResult["pips"];
+                    totalPips += pips;
+                    totalWin += (double)mapResult["pipsWin"];
+                    totalLoss += (double)mapResult["pipsLoss"];
+                    count += (int)mapResult["count"];
+                    countWin += (int)mapResult["wins"];
+                    countLoss += (int)mapResult["losses"];
+                    string result = string.Format("{0,-15}{1}\t{2}\t{3}\t{4}\t{5}\t{6}", 
+                        pair, 
+                        pips.ToString("F1"),
+                        ((double)mapResult["pipsWin"]).ToString("F1"),
+                        ((double)mapResult["pipsLoss"]).ToString("F1"),
+                        ((double)mapResult["count"]).ToString("F1"),
+                        mapResult["wins"],
+                        mapResult["losses"]
+                        );
+                    Console.WriteLine(result);
+                    appendLine(result);
+                    log.debug(result);
                 }
+                string result2 = string.Format("{0,-15}{1}\t{2}\t{3}\t{4}\t{5}\t{6}", 
+                    "Total", 
+                    totalPips.ToString("F1"),
+                    totalWin.ToString("F1"),
+                    totalLoss.ToString("F1"), 
+                    count.ToString(), 
+                    countWin.ToString(), 
+                    countLoss.ToString()
+                    );
+                Console.WriteLine(result2);
+                appendLine(result2);
+                log.debug(result2);
+
                 TransactionManager.snapshot();
             }
             catch (InvalidOperationException e)

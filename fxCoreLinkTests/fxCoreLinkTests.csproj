@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="AccumulatorMgrTests.cs" />
     <Compile Include="ExpertBaseTests.cs" />
+    <Compile Include="FxcmIndicatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimulatorTests.cs" />
     <Compile Include="TxnSimulatorTests.cs" />

@@ -31,7 +31,7 @@ namespace fxCoreLinkTests
                 txm.priceUpdate(pairAU, nowDt, price);
             }
 
-            double pips = txm.getClosedTrade().getClosedPositionGross(pairAU);
+            double pips = (double)txm.getClosedTrade().getClosedPositionGross(pairAU)["pips"];
             Assert.IsTrue(24<pips && pips<26, "Limit close");
             Console.WriteLine("Gross for {0} is {1}", pairAU, pips);
         }
@@ -47,7 +47,7 @@ namespace fxCoreLinkTests
                 txm.priceUpdate(pairAU, nowDt, price);
             }
 
-            double pips = txm.getClosedTrade().getClosedPositionGross(pairAU);
+            double pips = (double)txm.getClosedTrade().getClosedPositionGross(pairAU)["pips"];
             Assert.AreEqual(-20.0, Math.Round(pips, 5), "Stop close");
             Console.WriteLine("Gross for {0} is {1}", pairAU, pips);
         }
@@ -58,7 +58,7 @@ namespace fxCoreLinkTests
             double entryPrice2 = 0.6970;
 
             txm.getOrder().createMarketOrder(pairAU, new DateTime(2015, 1, 1, 1, 3, 1, 0), "SELL", 1000, entryPrice2, "id-1");
-            double pips = txm.getClosedTrade().getClosedPositionGross(pairAU);
+            double pips = (double)txm.getClosedTrade().getClosedPositionGross(pairAU)["pips"];
             Assert.AreEqual(40.0, Math.Round(pips, 5), "Opposing long");
             Assert.AreEqual(0, txm.getOrder().getOrderCount(pairAU));
             Assert.AreEqual(2, txm.getOrder().getOrderCount(pairAJ));
@@ -70,7 +70,7 @@ namespace fxCoreLinkTests
             double entryPrice2 = 82.10;
 
             txm.getOrder().createMarketOrder(pairAJ, new DateTime(2015, 1, 1, 1, 3, 1, 0), "BUY", 1000, entryPrice2, "id-1");
-            double pips = txm.getClosedTrade().getClosedPositionGross(pairAJ);
+            double pips = (double)txm.getClosedTrade().getClosedPositionGross(pairAJ)["pips"];
             Assert.AreEqual(40.0, Math.Round(pips, 3), "Opposing short");
             Assert.AreEqual(0, txm.getOrder().getOrderCount(pairAJ));
             Assert.AreEqual(2, txm.getOrder().getOrderCount(pairAU));
@@ -82,7 +82,7 @@ namespace fxCoreLinkTests
             double entryPrice2 = 82.10;
 
             txm.getOrder().createMarketOrder(pairAJ, new DateTime(2015, 1, 1, 1, 3, 1, 0), "BUY", 1000, entryPrice2, "id-1", 20, 0);
-            double pips = txm.getClosedTrade().getClosedPositionGross(pairAJ);
+            double pips = (double)txm.getClosedTrade().getClosedPositionGross(pairAJ)["pips"];
             Assert.AreEqual(40.0, Math.Round(pips, 3), "Opposing short");
             Assert.AreEqual(0, txm.getOrder().getOrderCount(pairAJ));
             Assert.AreEqual(2, txm.getOrder().getOrderCount(pairAU));

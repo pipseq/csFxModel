@@ -40,7 +40,7 @@ namespace fxCoreLinkTests
                 order.processOrders(pairAU, nowDt, price, price); // no spread for testing
             }
 
-            double pips = closedTrade.getClosedPositionGross(pairAU);
+            double pips = (double)closedTrade.getClosedPositionGross(pairAU)["pips"];
             Assert.AreEqual( 26.0, Math.Round(pips, 5), "Limit close");
             Console.WriteLine("Gross for {0} is {1}", pairAU, pips);
         }
@@ -56,7 +56,7 @@ namespace fxCoreLinkTests
                 order.processOrders(pairAU, nowDt, price, price); // no spread for testing
             }
 
-            double pips = closedTrade.getClosedPositionGross(pairAU);
+            double pips = (double)closedTrade.getClosedPositionGross(pairAU)["pips"];
             Assert.AreEqual(-20.0, Math.Round(pips, 5), "Stop close");
             Console.WriteLine("Gross for {0} is {1}", pairAU, pips);
         }
@@ -66,7 +66,7 @@ namespace fxCoreLinkTests
             double entryPrice2 = 0.6970;
 
             position.createPosition(pairAU, new DateTime(2015, 1, 1, 1, 3, 1, 0), "SELL", 1000, entryPrice2, "id-1", "custom-1");
-            double pips = closedTrade.getClosedPositionGross(pairAU);
+            double pips = (double)closedTrade.getClosedPositionGross(pairAU)["pips"];
             Assert.AreEqual(40.0, Math.Round(pips, 5), "Opposing long");
             Console.WriteLine("Gross for {0} is {1}", pairAU, pips);
         }
@@ -76,7 +76,7 @@ namespace fxCoreLinkTests
             double entryPrice2 = 82.10;
 
             position.createPosition(pairAJ, new DateTime(2015, 1, 1, 1, 3, 1, 0), "BUY", 1000, entryPrice2, "id-1", "custom-1");
-            double pips = closedTrade.getClosedPositionGross(pairAJ);
+            double pips = (double)closedTrade.getClosedPositionGross(pairAJ)["pips"];
             Assert.AreEqual(40.0, Math.Round(pips,3), "Opposing short");
             Console.WriteLine("Gross for {0} is {1}", pairAJ, pips);
         }
