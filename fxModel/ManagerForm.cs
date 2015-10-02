@@ -240,6 +240,9 @@ namespace fxModel
 
         public void journalReadDone()
         {
+
+#if false
+            // TODO-review for release
             try
             {
                 this.Invoke(new serviceGUIDelegate2(runStatusDelegate), false);
@@ -291,6 +294,7 @@ namespace fxModel
             catch (InvalidOperationException e)
             {
             }
+#endif
         }
 
         public string getProperty(string name, string dflt)
@@ -317,9 +321,9 @@ namespace fxModel
         {
             throw new NotImplementedException();
         }
-        #endregion
+#endregion
 
-        #region behaviors
+#region behaviors
 
 
         private void buttonPickPairs_Click(object sender, EventArgs e)
@@ -473,7 +477,7 @@ namespace fxModel
                 version1,
                 "www.pipseq.org"));
         }
-        #endregion
+#endregion
 
         private void buttonCsRun_Click(object sender, EventArgs e)
         {
