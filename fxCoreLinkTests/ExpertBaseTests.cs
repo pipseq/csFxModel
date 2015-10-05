@@ -101,7 +101,7 @@ namespace fxCoreLinkTests
             priceProcessor = new PriceProcessor(this, this, fxManager, fxUpdates);
             expertFactory = new ExpertFactory(priceProcessor);
 
-            accumulatorMgr.Snapshot = "testdata";
+            accumulatorMgr.Snapshot = "..\\..\\testdata";
             accumulatorMgr.read();  // load history
 
             expertFactory.subscribe(expert);

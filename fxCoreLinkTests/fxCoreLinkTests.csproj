@@ -102,6 +102,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="testdata.json" />
+    <None Include="testdata1.json" />
+    <None Include="testdata1Result.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
