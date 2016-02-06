@@ -138,8 +138,8 @@ namespace Common
         }
         public bool isBetweenInclusive(TimeSpan t1, TimeSpan t2)
         {
-            bool b1 = DateTime.Now >= DateTime.Today.Add(t1);
-            bool b2 = DateTime.Now <= DateTime.Today.Add(t2);
+            bool b1 = Clock.Now() >= Clock.Now().Date.Add(t1);
+            bool b2 = Clock.Now() <= Clock.Now().Date.Add(t2);
             return b1 && b2;
         }
         public bool isNearClosed()
@@ -149,7 +149,7 @@ namespace Common
 
         public bool isNearClosed(string sBeginTime)
         {
-            bool b1 = isClosed(DateTime.Now);
+            bool b1 = isClosed(Clock.Now());
 
             bool b2 = isBetweenInclusive(sBeginTime, "17:00:00"); // 4pm - 5pm
             return b1 || b2;
@@ -157,7 +157,7 @@ namespace Common
 
         public bool isClosed()
         {
-            return isClosed(DateTime.Now);
+            return isClosed(Clock.Now());
         }
 
         public bool isClosed(string dateStr, string timespanStr)
@@ -207,7 +207,7 @@ namespace Common
         #region time utility
         public static DateTime getTimeNow()
         {
-            return DateTime.Now;
+            return Clock.Now();
         }
 
         public static string getTimeNowFormatted()

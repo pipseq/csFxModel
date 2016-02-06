@@ -22,7 +22,7 @@ namespace fxCoreLink.Tests
         {
             AccumulatorMgr accumulatorMgr = new AccumulatorMgr();
             accumulatorMgr.Debug = false;
-            accumulatorMgr.Snapshot = "testdata1";
+            accumulatorMgr.Snapshot = "..\\..\\testdata1";
             accumulatorMgr.read();  // load history
 
             for (int m = 1; m <= 2; m++)    // days
@@ -42,7 +42,7 @@ namespace fxCoreLink.Tests
 
             accumulatorMgr.roll(new DateTime(2000, 1, 1, 0, 1, 0));
             string after = accumulatorMgr.writeString();
-            string afterCmp = File.ReadAllText("testdata1Result.json");
+            string afterCmp = File.ReadAllText("..\\..\\testdata1Result.json");
             Assert.AreEqual(after.Trim(), afterCmp.Trim(), "roll failed");
         }
     }

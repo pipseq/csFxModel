@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3213409E-37D8-45F2-BD97-99F634846C1D}</ProjectGuid>
+    <ProjectGuid>{86D3707F-9F3D-45F6-9F7F-58ED3181D248}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>simulatedTrading</RootNamespace>
@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="fxcore2">
-      <HintPath>..\..\..\Program Files\Candleworks\ForexConnectAPIx64\bin\net\dotnet40\fxcore2.dll</HintPath>
+      <HintPath>..\..\..\..\Program Files\Candleworks\ForexConnectAPIx64\bin\net\dotnet40\fxcore2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -44,22 +44,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClosedTrade.cs" />
+    <Compile Include="FXManagerSimulated.cs" />
     <Compile Include="FxUpdatesSimulated.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="MarketTradeSimulated.cs" />
     <Compile Include="Order.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FXManagerSimulated.cs" />
     <Compile Include="TransactionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{647f33a5-21c9-4942-9c8e-1357e62727a0}</Project>
+      <Project>{56980dcb-617e-4125-9e65-1e1a3f826c36}</Project>
       <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\fxCoreLink\fxCoreLink.csproj">
-      <Project>{7639f97d-2abd-4730-ba65-8f63eef71ca9}</Project>
+      <Project>{da7e37fa-736b-4f1e-bfe0-92eee727e20c}</Project>
       <Name>fxCoreLink</Name>
     </ProjectReference>
   </ItemGroup>

@@ -2,12 +2,12 @@
 	<property key="url" value="http://www.fxcorporate.com/Hosts.jsp"/>
 	<!--<property key="mailRecipient" value="{cell-number}@txt.att.net"/>-->
 	<property key="pyfile" value="${projectFolder}\${pythonFolder}\macdSignal.py"/>
-	<property key="journalFile" value="${projectFolder}\${resFolder}\testdata"/><!-- no extension specified-used for two files (.tdv and .json) -->
+	<property key="journalFile" value="${projectFolder}\${resFolder}\testdata9"/><!-- no extension specified-used for two files (.tdv and .json) -->
 	<!--<property key="journalFile" value="C:\test\090315\csFxModel\var\res\testdata2b"/>--><!-- no extension specified-used for two files (.tdv and .json) -->
 	<property key="priceHistory.bars" value="60"/><!-- ForexConnectAPINET doc recommends not more than 300 bars max -->
 	<property key="selectedPairs" value="AUD/JPY,AUD/USD,EUR/CHF,EUR/GBP,EUR/JPY,EUR/USD,GBP/JPY,GBP/USD,NZD/USD,USD/CAD,USD/CHF,USD/CNH,USD/JPY"/>
 	<property key="ordersArmed" value="true"/>
-	<property key="defaultTimeFrame" value="m15"/>
+	<property key="defaultTimeFrame" value="m5"/>
 	<!-- Pairs for reference
 	AUD AUD/CAD,AUD/JPY,AUD/NZD,AUD/USD,EUR/AUD,GBP/AUD
 	CAD CAD/JPY,EUR/CAD,GBP/CAD,USD/CAD
@@ -20,7 +20,12 @@
 	<!-- accounts -->
 <!-- Demo or Real connection, 
 	obtain a demo account at http://www.fxcm.com/forex-trading-demo/ --> 
- 	<property key="user" value="{USERNAME}"/>
+<!-- 	<property key="user" value="{USERNAME}"/>
 	<property key="pw" value="{PASSWORD}"/>
-	<property key="connection" value="simulated"/>
+	<property key="connection" value="simulated"/>-->
+<!-- 	<property key="user" value="D173005319001"/>
+	<property key="pw" value="5868"/>-->
+ 	<property key="user" value="D173021036001"/>
+	<property key="pw" value="3502"/>
+	<property key="connection" value="Demo"/>
 </properties>

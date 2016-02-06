@@ -101,7 +101,7 @@ namespace fxCoreLinkTests
             priceProcessor = new PriceProcessor(this, this, fxManager, fxUpdates);
             expertFactory = new ExpertFactory(priceProcessor);
 
-            accumulatorMgr.Snapshot = "testdata";
+            accumulatorMgr.Snapshot = "..\\..\\testdata";
             accumulatorMgr.read();  // load history
 
             expertFactory.subscribe(expert);
@@ -410,6 +410,16 @@ namespace fxCoreLinkTests
         public void journalReadDone()
         {
             //throw new NotImplementedException();
+        }
+
+        public void progress(long current, long max)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void scope(object model)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

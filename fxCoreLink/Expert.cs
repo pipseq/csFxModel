@@ -608,7 +608,7 @@ namespace fxCoreLink
         }
     }
 
-    public class ExpertFactory : TimePriceComponents, PriceListener
+    public class ExpertFactory : TimePriceComponents, PriceListener, IClock
     {
         Logger log = Logger.LogManager("ExpertFactory");
 
@@ -665,6 +665,21 @@ namespace fxCoreLink
             }
         }
 
+        public bool FactoryActive
+        {
+            get
+            {
+                return factoryActive;
+            }
+
+            set
+            {
+                factoryActive = value;
+            }
+        }
+
+        private Boolean factoryActive = false;
+
         public ExpertFactory(PriceProcessor priceProcessor)
         {
             this.display = priceProcessor.Display;
@@ -672,11 +687,14 @@ namespace fxCoreLink
             this.fxManager = priceProcessor.FxManager;
             this.fxUpdates = priceProcessor.FxUpdates;
             fxUpdates.AccumMgr.subscribePrice(this);
+            FactoryActive = true;
         }
 
         public void shutdown()
         {
             fxUpdates.AccumMgr.unsubscribePrice(this);
+            stopExperts();
+            FactoryActive = false;
         }
 
         #region subscription
@@ -810,13 +828,23 @@ namespace fxCoreLink
                 expert.start();
             }
         }
+
+        public void stopExperts()
+        {
+            foreach (ExpertBase expert in map.Keys)
+            {
+                expert.Factory = this;
+                expert.stop();
+            }
+        }
         #endregion
         #region PriceListener implementation
 
         private object lockObject = new System.Object();
         public void periodicUpdate(TimeFrame[] timeFrames, DateTime now)
         {
-            foreach (string pair in getSubscribersPairs())
+            List<string> pairs = getSubscribersPairs();
+            foreach (string pair in pairs)
             {
                 foreach (TimeFrame timeFrame in timeFrames.Reverse())
                 {
@@ -843,11 +871,28 @@ namespace fxCoreLink
             List<ExpertBase> le = new List<ExpertBase>(listExperts);
             foreach (ExpertBase expert in le)
             {
-                lock (lockObject) {     // synch journal writing
+                //if (pair == "AUD/JPY")
+                //{
+                //    var a = 1;
+                //    return false;
+                //}
+                //if (pair == "AUD/USD")
+                //{
+                //    var a = 1;
+                //}
+                if (Control.isJournalRead())
+                {
                     expert.timeUpdate(timeFrame);
-                    if (Control.isJournalWrite())
-                    {
-                        journal(pair, timeFrame);
+                }
+                else
+                {
+                    lock (lockObject)
+                    {     // synch journal writing
+                        if (Control.isJournalWrite())
+                        {
+                            journal(pair, timeFrame);
+                        }
+                        expert.timeUpdate(timeFrame);
                     }
                 }
             }
@@ -862,16 +907,34 @@ namespace fxCoreLink
                 List<ExpertBase> leb = new List<ExpertBase>(list);
                 foreach (ExpertBase expert in leb)
                 {
-                    lock (lockObject)     // synch journal writing
-                    {     // synch journal writing
+                    if (Control.isJournalRead())
+                    {
                         expert.priceUpdate(datetime, bid, ask);
-                        if (Control.isJournalWrite())
-                        {
-                            journal(datetime, pair, bid, ask);
+                    }
+                    else {
+                        lock (lockObject)     // synch journal writing
+                        {     // synch journal writing
+                            if (Control.isJournalWrite())
+                            {
+                                journal(datetime, pair, bid, ask);
+                            }
+                            expert.priceUpdate(datetime, bid, ask);
                         }
                     }
                 }
             }
+        }
+        #endregion
+        #region IClock implementation
+        // this could be real time, server time or playback journal time (or other?)
+        private DateTime journalDT;
+        public DateTime Now()
+        {
+            if (Control.isJournalRead())
+            {
+                return journalDT;
+            }
+            return DateTime.Now;
         }
         #endregion
         #region journaling
@@ -879,6 +942,7 @@ namespace fxCoreLink
         string file;
         bool append = true;  // all file writes are appended
         bool init = false;
+        private readonly string journalDTFormat = "yyyy-MM-dd HH:mm:ss.fff";
         public void setJournal(List<string> pairs, string file)
         {
             this.pairs = new HashSet<string>(pairs);
@@ -907,7 +971,7 @@ namespace fxCoreLink
                 using (StreamWriter sw = new StreamWriter(file, append))
                 {
                     sw.WriteLine(string.Format(
-                        "{0}\t{1}\t{2}\t{3}", datetime, pair, bid, ask));
+                        "{0}\t{1}\t{2}\t{3}", datetime.ToString(journalDTFormat), pair, bid, ask));
                 }
         }
         private void journal(string pair, TimeFrame timeframe)
@@ -917,8 +981,7 @@ namespace fxCoreLink
                 using (StreamWriter sw = new StreamWriter(file, append))
                 {
                     sw.WriteLine(string.Format(
-                        "{0}\t{1}\t{2}", DateTime.Now, pair, timeFrameMap[TimeFrame.m1], "timeUpdate")); // journal only at m1
-                    //"{0}\t{1}\t{2}", DateTime.Now, pair, timeFrameMap[timeframe], "timeUpdate"));
+                        "{0}\t{1}\t{2}", this.Now().ToString(journalDTFormat), pair, timeFrameMap[TimeFrame.m1], "timeUpdate")); // journal only at m1
                 }
         }
         private void journal(string command)
@@ -927,19 +990,26 @@ namespace fxCoreLink
             using (StreamWriter sw = new StreamWriter(file, append))
             {
                 sw.WriteLine(string.Format(
-                    "{0}\t{1}", DateTime.Now, command));
+                    "{0}\t{1}", this.Now(), command));
             }
         }
         public void readJournal()
         {
-            new Thread(readJournalDelegate).Start();
+            Thread t = new Thread(readJournalDelegate);
+            t.Name = "readJournal";
+            t.Start();
         }
         public void readJournalDelegate()
         {
             Display.appendLine("File {0} started", file);
             using (StreamReader sr = new StreamReader(file))
             {
-                while (offersFileReader(sr)) ;
+                long length = sr.BaseStream.Length;
+                while (offersFileReader(sr))
+                {
+                    long position = sr.BaseStream.Position;
+                    Display.progress(position, length);
+                }
             }
             Control.journalReadDone();
             Display.appendLine("File {0} finished", file);
@@ -966,26 +1036,26 @@ namespace fxCoreLink
                     break;
 
                 case 3:
-                    DateTime dt = DateTime.Parse(fields[0]);
+                    journalDT = DateTime.Parse(fields[0]);
                     string pr = fields[1];
                     string tf = fields[2];
                     TimeFrame timeframe = TimeFrameInverseMap[tf];
                     if (pairs.Contains(pr))
                     {
-                        roll(pr, dt);
+                        roll(pr, journalDT);
                         periodicUpdateMax(pr, timeframe);
                     }
                     break;
 
                 case 4:
-                    dt = DateTime.Parse(fields[0]);
+                    journalDT = DateTime.Parse(fields[0]);
                     pr = fields[1];
                     double bid = double.Parse(fields[2]);
                     double ask = double.Parse(fields[3]);
                     if (pairs.Contains(pr))
                     {
-                        update(pr, dt, bid, ask);
-                        fxUpdates.AccumMgr.accumulate(pr, dt, bid, ask);
+                        fxUpdates.AccumMgr.accumulate(pr, journalDT, bid, ask);
+                        update(pr, journalDT, bid, ask);
                     }
                     break;
 
@@ -1178,7 +1248,7 @@ namespace fxCoreLink
             priceUpdateProcess = new PriceUpdateProcess(this, timeFrames);
 
             // now set up minute correction timer
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.Now;    // realtime feed only
             int intervalCorrect = 60 - now.Second;
             Timing timerCorrect = TimerMgr.getInstance().create("correction", intervalCorrect);
             TimerMgr.getInstance().putTimerMap(timerCorrect, "timer", timer);
@@ -1214,7 +1284,7 @@ namespace fxCoreLink
         {
             if (now == DateTime.MinValue)
             {
-                now = DateTime.Now;
+                now = Clock.Now();
             }
             return (now.Day - 1) * 24 * 60 + now.Hour * 60 + now.Minute;
         }

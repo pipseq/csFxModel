@@ -972,6 +972,16 @@ namespace fxCoreLinkTests
         {
             throw new NotImplementedException();
         }
+
+        public void progress(long current, long max)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void scope(object model)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }

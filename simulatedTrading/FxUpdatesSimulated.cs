@@ -345,12 +345,12 @@ namespace simulatedTrading
 
         public void enterPosition(string pair, string buySell, double last, int stopPips, int limitPips, int amount, string customId)
         {
-            TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId, stopPips, limitPips);
+            TransactionManager.getInstance().getOrder().createMarketOrder(pair, Clock.Now(), buySell, amount, last, customId, stopPips, limitPips);
         }
 
         public void enterPosition(string pair, string buySell, double last, int stopPips, bool trailStop, int limitPips, int amount, string customId)
         {
-            TransactionManager.getInstance().getOrder().createMarketOrder(pair, DateTime.Now, buySell, amount, last, customId, stopPips, limitPips, trailStop);
+            TransactionManager.getInstance().getOrder().createMarketOrder(pair, Clock.Now(), buySell, amount, last, customId, stopPips, limitPips, trailStop);
         }
 
         public string getPairOfferId(string pair)

@@ -217,13 +217,13 @@ namespace simulatedTrading
                             map["openPrice"] = bid;
                         }
                     }
-                }
-            if (found)
-            {
-                Dictionary<string, object> mapData = position.closePosition(pair);
-                closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, orderId, (string)mapData["tradeId"], (string)mapData["customId"]);
-
-            }
+                    if (found)
+                    {
+                        Dictionary<string, object> mapData = position.closePosition(pair);
+                        closedTrade.createClosedPosition(pair, (DateTime)mapData["datetime"], dt, (string)mapData["entry"], (int)mapData["amount"], (double)mapData["price"], currentPrice, orderId, (string)mapData["tradeId"], (string)mapData["customId"]);
+                        break;
+                    }
+              }
         }
         public void closeOrders(string pair, string openEntry)
         {

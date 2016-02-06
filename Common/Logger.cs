@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 namespace Common
 {
@@ -116,16 +117,33 @@ namespace Common
         }
         private void output(string s)
         {
-            lock (fname)
+            bool lockWasTaken = false;
+            var lockObject = new object();
+            StreamWriter sw = null;
+            try
             {
-                System.Console.WriteLine(s);
-                StreamWriter sw = new StreamWriter(fname, true);
-                if (sw != null)
+                Monitor.Enter(lockObject, ref lockWasTaken);
                 {
-                    sw.WriteLine(s);
-                    sw.Flush();
+                    System.Console.WriteLine(s);
+                    sw = new StreamWriter(fname, true);
+                    if (sw != null)
+                    {
+                        sw.WriteLine(s);
+                        sw.Flush();
+                        sw.Close();
+                        sw = null;
+                    }
                 }
-                sw.Close();
+            }
+            catch (IOException ioe)
+            {
+                System.Console.Error.WriteLine(ioe.Message);
+            }
+            finally
+            {
+                if (sw != null)
+                    sw.Close();
+                if (lockWasTaken) Monitor.Exit(lockObject);
             }
         }
     }

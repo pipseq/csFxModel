@@ -1,4 +1,5 @@
 ﻿using System;
+using Common;
 using Common.fx;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,14 +16,14 @@ namespace simulatedTrading
         public string trade(string mInstrument, int mAmount, string mBuySell, int stopPips, bool trailingStop, int limitPips, double expectedPrice, string customId)
         {
             string orderid = TransactionManager.getInstance().getOrder()
-                .createMarketOrder(mInstrument, DateTime.Now, mBuySell, mAmount, expectedPrice, customId, stopPips, limitPips,trailingStop);
+                .createMarketOrder(mInstrument, Clock.Now(), mBuySell, mAmount, expectedPrice, customId, stopPips, limitPips,trailingStop);
             return orderid;
         }
 
         public string trade(string mInstrument, int mAmount, string mBuySell, int stopPips, int limitPips, double expectedPrice, string customId)
         {
             string orderid = TransactionManager.getInstance().getOrder()
-                .createMarketOrder(mInstrument, DateTime.Now, mBuySell, mAmount, expectedPrice, customId, stopPips, limitPips);
+                .createMarketOrder(mInstrument, Clock.Now(), mBuySell, mAmount, expectedPrice, customId, stopPips, limitPips);
             return orderid;
         }
     }

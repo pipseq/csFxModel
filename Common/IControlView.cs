@@ -30,6 +30,8 @@ namespace Common
         void setStatus(string s);
         //void setStatus2(string s, Color color);
         void logger(string s);
+        void progress(long current, long max);
+        void scope(object model);
     }
     #endregion
 }

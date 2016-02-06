@@ -1,0 +1,17 @@
+<properties>
+	<property key="models" value="${projectFolder}\${modelFolder}\pipseq.org\2016\01\forex.ttl,${projectFolder}\${modelFolder}\pipseq.org\2016\01\fx\strategy.ttl"/>
+	<property key="ruleengine.diagnostics" value="true"/>
+	<property key="ruleengine.logginglevel" value="6"/>
+	<property key="ema.periods" value="30"/>
+	<property key="rsi.periods" value="14"/>
+	<property key="macd.short" value="12"/>
+	<property key="macd.long" value="26"/>
+	<property key="macd.signal" value="9"/>
+	<property key="stoploss.active" value="true"/>
+	<property key="stoploss" value="12"/>
+	<property key="limit.active" value="true"/>
+	<property key="limit" value="25"/>
+	<property key="amount" value="1000"/>
+	<property key="riskmanagement" value="true"/>
+	<property key="expertCantrade" value="true"/>
+</properties>

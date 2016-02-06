@@ -73,10 +73,11 @@ namespace fxCoreLink
         {
             get
             {
+                DateTime now = Clock.Now();
                 string s = string.Format("{0}{1}{2}{3}",
-                    DateTime.Now.Year,
-                    DateTime.Now.Month,
-                    DateTime.Now.Day,
+                    now.Year,
+                    now.Month,
+                    now.Day,
                     customIdCounter++.ToString("D6"));
                 return s;
             }

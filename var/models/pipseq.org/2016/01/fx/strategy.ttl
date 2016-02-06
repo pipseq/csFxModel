@@ -1,0 +1,631 @@
+# baseURI: http://pipseq.org/2016/01/fx/strategy
+# imports: http://pipseq.org/2016/01/forex
+
+@prefix afn: <http://jena.hpl.hp.com/ARQ/function#> .
+@prefix fn: <java:org.pipseq.rdf.jena.filter.> .
+@prefix fxs: <http://pipseq.org/2016/01/fx/strategy#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pip: <http://pipseq.org/2016/01/forex#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sp: <http://spinrdf.org/sp#> .
+@prefix spin: <http://spinrdf.org/spin#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+pip:IndicatorBasedStrategy
+  spin:rule [
+      rdf:type sp:Construct ;
+      sp:templates (
+          [
+            sp:object pip:Trade ;
+            sp:predicate rdf:type ;
+            sp:subject _:b10345 ;
+          ]
+          [
+            sp:object [
+                sp:varName "tradeTs"^^xsd:string ;
+              ] ;
+            sp:predicate pip:TimeStamp ;
+            sp:subject _:b10345 ;
+          ]
+          [
+            sp:object [
+                sp:varName "agree"^^xsd:string ;
+              ] ;
+            sp:predicate pip:hasPosition ;
+            sp:subject _:b10345 ;
+          ]
+          [
+            sp:object [
+                sp:varName "pair"^^xsd:string ;
+              ] ;
+            sp:predicate pip:hasInstrument ;
+            sp:subject _:b10345 ;
+          ]
+        ) ;
+      sp:where (
+          [
+            sp:object pip:RuleContextSingleton ;
+            sp:predicate rdf:type ;
+            sp:subject [
+                sp:varName "rc"^^xsd:string ;
+              ] ;
+          ]
+          [
+            sp:object [
+                sp:varName "pair"^^xsd:string ;
+              ] ;
+            sp:predicate pip:hasInstrument ;
+            sp:subject [
+                sp:varName "rc"^^xsd:string ;
+              ] ;
+          ]
+          [
+            rdf:type sp:Bind ;
+            sp:expression 60 ;
+            sp:variable [
+                sp:varName "timeframe"^^xsd:string ;
+              ] ;
+          ]
+          [
+            rdf:type sp:SubQuery ;
+            sp:query [
+                rdf:type sp:Select ;
+                sp:distinct "true"^^xsd:boolean ;
+                sp:resultVariables (
+                    [
+                      sp:varName "tradeTs"^^xsd:string ;
+                    ]
+                    [
+                      sp:varName "agree"^^xsd:string ;
+                    ]
+                  ) ;
+                sp:where (
+                    [
+                      rdf:type sp:SubQuery ;
+                      sp:query [
+                          rdf:type sp:Select ;
+                          sp:limit "1"^^xsd:long ;
+                          sp:orderBy (
+                              [
+                                rdf:type sp:Desc ;
+                                sp:expression [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                              ]
+                            ) ;
+                          sp:resultVariables (
+                              [
+                                sp:varName "trig1"^^xsd:string ;
+                              ]
+                              [
+                                sp:varName "trec1"^^xsd:string ;
+                              ]
+                            ) ;
+                          sp:where (
+                              [
+                                rdf:type sp:Bind ;
+                                sp:expression fxs:Trigger_1 ;
+                                sp:variable [
+                                    sp:varName "trig1"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:TradeRecommendation ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "trec1"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig1"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "trec1"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:TimeStamp ;
+                                sp:subject [
+                                    sp:varName "trec1"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig1"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object fxs:Crossover_1 ;
+                                sp:predicate pip:hasSignal ;
+                                sp:subject [
+                                    sp:varName "trig1"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:Setup ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "setup"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasSetup ;
+                                sp:subject spin:_this ;
+                              ]
+                              [
+                                rdf:type sp:Filter ;
+                                sp:expression [
+                                    rdf:type <java:org.pipseq.rdf.jena.filter.isWithin> ;
+                                    sp:arg1 [
+                                        sp:varName "ts"^^xsd:string ;
+                                      ] ;
+                                    sp:arg2 30 ;
+                                    sp:arg3 "minutes" ;
+                                  ] ;
+                              ]
+                            ) ;
+                        ] ;
+                    ]
+                    [
+                      rdf:type sp:SubQuery ;
+                      sp:query [
+                          rdf:type sp:Select ;
+                          sp:limit "5"^^xsd:long ;
+                          sp:orderBy (
+                              [
+                                rdf:type sp:Desc ;
+                                sp:expression [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                              ]
+                            ) ;
+                          sp:resultVariables (
+                              [
+                                sp:varName "trig2"^^xsd:string ;
+                              ]
+                              [
+                                sp:varName "trec2"^^xsd:string ;
+                              ]
+                            ) ;
+                          sp:where (
+                              [
+                                rdf:type sp:Bind ;
+                                sp:expression fxs:TriggerPattern_1 ;
+                                sp:variable [
+                                    sp:varName "trig2"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:TradeRecommendation ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "trec2"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig2"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "trec2"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:TimeStamp ;
+                                sp:subject [
+                                    sp:varName "trec2"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig2"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object fxs:PriceFastSlowPattern_1 ;
+                                sp:predicate pip:hasSignal ;
+                                sp:subject [
+                                    sp:varName "trig2"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:Setup ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "setup"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasSetup ;
+                                sp:subject spin:_this ;
+                              ]
+                              [
+                                rdf:type sp:Filter ;
+                                sp:expression [
+                                    rdf:type <java:org.pipseq.rdf.jena.filter.isWithin> ;
+                                    sp:arg1 [
+                                        sp:varName "ts"^^xsd:string ;
+                                      ] ;
+                                    sp:arg2 30 ;
+                                    sp:arg3 "minutes" ;
+                                  ] ;
+                              ]
+                            ) ;
+                        ] ;
+                    ]
+                    [
+                      rdf:type sp:SubQuery ;
+                      sp:query [
+                          rdf:type sp:Select ;
+                          sp:limit "1"^^xsd:long ;
+                          sp:orderBy (
+                              [
+                                rdf:type sp:Desc ;
+                                sp:expression [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                              ]
+                            ) ;
+                          sp:resultVariables (
+                              [
+                                sp:varName "trig3"^^xsd:string ;
+                              ]
+                              [
+                                sp:varName "trec3"^^xsd:string ;
+                              ]
+                            ) ;
+                          sp:where (
+                              [
+                                rdf:type sp:Bind ;
+                                sp:expression fxs:Trigger_3 ;
+                                sp:variable [
+                                    sp:varName "trig3"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:TradeRecommendation ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "trec3"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig3"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "trec3"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object fxs:RSIThresholdCross_1 ;
+                                sp:predicate pip:hasSignal ;
+                                sp:subject [
+                                    sp:varName "trig"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "ts"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:TimeStamp ;
+                                sp:subject [
+                                    sp:varName "trec3"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "trig3"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasTrigger ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object pip:Setup ;
+                                sp:predicate rdf:type ;
+                                sp:subject [
+                                    sp:varName "s"^^xsd:string ;
+                                  ] ;
+                              ]
+                              [
+                                sp:object [
+                                    sp:varName "setup"^^xsd:string ;
+                                  ] ;
+                                sp:predicate pip:hasSetup ;
+                                sp:subject spin:_this ;
+                              ]
+                              [
+                                rdf:type sp:Filter ;
+                                sp:expression [
+                                    rdf:type <java:org.pipseq.rdf.jena.filter.isWithin> ;
+                                    sp:arg1 [
+                                        sp:varName "ts"^^xsd:string ;
+                                      ] ;
+                                    sp:arg2 30 ;
+                                    sp:arg3 "minutes" ;
+                                  ] ;
+                              ]
+                            ) ;
+                        ] ;
+                    ]
+                    [
+                      sp:object [
+                          sp:varName "pos1"^^xsd:string ;
+                        ] ;
+                      sp:predicate pip:hasPosition ;
+                      sp:subject [
+                          sp:varName "trec1"^^xsd:string ;
+                        ] ;
+                    ]
+                    [
+                      sp:object [
+                          sp:varName "pos2"^^xsd:string ;
+                        ] ;
+                      sp:predicate pip:hasPosition ;
+                      sp:subject [
+                          sp:varName "trec2"^^xsd:string ;
+                        ] ;
+                    ]
+                    [
+                      sp:object [
+                          sp:varName "pos3"^^xsd:string ;
+                        ] ;
+                      sp:predicate pip:hasPosition ;
+                      sp:subject [
+                          sp:varName "trec3"^^xsd:string ;
+                        ] ;
+                    ]
+                    [
+                      rdf:type sp:TriplePath ;
+                      sp:object [
+                          sp:varName "policy"^^xsd:string ;
+                        ] ;
+                      sp:path [
+                          rdf:type sp:SeqPath ;
+                          sp:path1 pip:hasSetup ;
+                          sp:path2 pip:hasEntryPolicy ;
+                        ] ;
+                      sp:subject spin:_this ;
+                    ]
+                    [
+                      rdf:type sp:Bind ;
+                      sp:expression [
+                          rdf:type <java:org.pipseq.rdf.jena.filter.vote> ;
+                          sp:arg1 [
+                              sp:varName "policy"^^xsd:string ;
+                            ] ;
+                          sp:arg2 [
+                              sp:varName "pos1"^^xsd:string ;
+                            ] ;
+                          sp:arg3 [
+                              sp:varName "pos2"^^xsd:string ;
+                            ] ;
+                          sp:arg4 [
+                              sp:varName "pos3"^^xsd:string ;
+                            ] ;
+                        ] ;
+                      sp:variable [
+                          sp:varName "agree"^^xsd:string ;
+                        ] ;
+                    ]
+                    [
+                      rdf:type sp:Filter ;
+                      sp:expression [
+                          rdf:type sp:ne ;
+                          sp:arg1 [
+                              sp:varName "agree"^^xsd:string ;
+                            ] ;
+                          sp:arg2 "false"^^xsd:boolean ;
+                        ] ;
+                    ]
+                    [
+                      rdf:type sp:Bind ;
+                      sp:expression [
+                          rdf:type <java:org.pipseq.rdf.jena.filter.now> ;
+                        ] ;
+                      sp:variable [
+                          sp:varName "tradeTs"^^xsd:string ;
+                        ] ;
+                    ]
+                  ) ;
+              ] ;
+          ]
+        ) ;
+      rdfs:comment "4"^^xsd:string ;
+    ] ;
+.
+<http://pipseq.org/2016/01/fx/strategy>
+  rdf:type owl:Ontology ;
+  owl:imports <http://pipseq.org/2016/01/forex> ;
+  skos:changeNote "This strategy and model have been modified.  The EMA crossover signal at the m1 timeframe has been replaced with a market condition signaled by a bull market state (price over EMA fast over EMA slow) or bear market state (price under EMA fast under EMA slow). The strategies can be toggeled by setting Trigger_2 in Setup_1 for the old strategy or Trigger_4 in Setup_1 for the new strategy. "^^xsd:string ;
+  skos:definition "A model for a specific strategy.  A Trade is signaled when, for a given pair, a crossover of slow and fast EMA occur at the m1 and m5 timeframes, along with an RSI cross into overbought or oversold territory."^^xsd:string ;
+.
+fxs:Crossover_1
+  rdf:type pip:Crossover ;
+  pip:hasFastIndicator fxs:EMA_8 ;
+  pip:hasSlowIndicator fxs:EMA_34 ;
+  rdfs:label "Lines cross 1"^^xsd:string ;
+.
+fxs:EMAPeriodSetting_34
+  rdf:type pip:EMAPeriodSetting ;
+  pip:period 34 ;
+  rdfs:label "EMAPeriod setting 34"^^xsd:string ;
+.
+fxs:EMAPeriodSetting_8
+  rdf:type pip:EMAPeriodSetting ;
+  pip:period 8 ;
+  rdfs:label "EMAPeriod setting 8"^^xsd:string ;
+.
+fxs:EMA_34
+  rdf:type pip:EMA ;
+  pip:hasIndicatorSetting fxs:EMAPeriodSetting_34 ;
+  pip:hasInstrument pip:AUDJPY ;
+  pip:hasInstrument pip:AUDUSD ;
+  pip:hasInstrument pip:EURCHF ;
+  pip:hasInstrument pip:EURGBP ;
+  pip:hasInstrument pip:EURJPY ;
+  pip:hasInstrument pip:EURUSD ;
+  pip:hasInstrument pip:GBPJPY ;
+  pip:hasInstrument pip:GBPUSD ;
+  pip:hasInstrument pip:NZDUSD ;
+  pip:hasInstrument pip:USDCAD ;
+  pip:hasInstrument pip:USDCHF ;
+  pip:hasInstrument pip:USDCNH ;
+  pip:hasInstrument pip:USDJPY ;
+  pip:hasTimeFrame pip:m5 ;
+  rdfs:label "EMA 34"^^xsd:string ;
+.
+fxs:EMA_34_1
+  rdf:type pip:EMA ;
+  pip:hasIndicatorSetting fxs:EMAPeriodSetting_34 ;
+  pip:hasInstrument pip:AUDJPY ;
+  pip:hasInstrument pip:AUDUSD ;
+  pip:hasInstrument pip:EURCHF ;
+  pip:hasInstrument pip:EURGBP ;
+  pip:hasInstrument pip:EURJPY ;
+  pip:hasInstrument pip:EURUSD ;
+  pip:hasInstrument pip:GBPJPY ;
+  pip:hasInstrument pip:GBPUSD ;
+  pip:hasInstrument pip:NZDUSD ;
+  pip:hasInstrument pip:USDCAD ;
+  pip:hasInstrument pip:USDCHF ;
+  pip:hasInstrument pip:USDCNH ;
+  pip:hasInstrument pip:USDJPY ;
+  pip:hasTimeFrame pip:m1 ;
+  rdfs:label "EMA 34 1"^^xsd:string ;
+.
+fxs:EMA_8
+  rdf:type pip:EMA ;
+  pip:hasIndicatorSetting fxs:EMAPeriodSetting_8 ;
+  pip:hasInstrument pip:AUDJPY ;
+  pip:hasInstrument pip:AUDUSD ;
+  pip:hasInstrument pip:EURCHF ;
+  pip:hasInstrument pip:EURGBP ;
+  pip:hasInstrument pip:EURJPY ;
+  pip:hasInstrument pip:EURUSD ;
+  pip:hasInstrument pip:GBPJPY ;
+  pip:hasInstrument pip:GBPUSD ;
+  pip:hasInstrument pip:NZDUSD ;
+  pip:hasInstrument pip:USDCAD ;
+  pip:hasInstrument pip:USDCHF ;
+  pip:hasInstrument pip:USDCNH ;
+  pip:hasInstrument pip:USDJPY ;
+  pip:hasTimeFrame pip:m5 ;
+  rdfs:label "EMA 8"^^xsd:string ;
+.
+fxs:EMA_8_1
+  rdf:type pip:EMA ;
+  pip:hasIndicatorSetting fxs:EMAPeriodSetting_8 ;
+  pip:hasInstrument pip:AUDJPY ;
+  pip:hasInstrument pip:AUDUSD ;
+  pip:hasInstrument pip:EURCHF ;
+  pip:hasInstrument pip:EURGBP ;
+  pip:hasInstrument pip:EURJPY ;
+  pip:hasInstrument pip:EURUSD ;
+  pip:hasInstrument pip:GBPJPY ;
+  pip:hasInstrument pip:GBPUSD ;
+  pip:hasInstrument pip:NZDUSD ;
+  pip:hasInstrument pip:USDCAD ;
+  pip:hasInstrument pip:USDCHF ;
+  pip:hasInstrument pip:USDCNH ;
+  pip:hasInstrument pip:USDJPY ;
+  pip:hasTimeFrame pip:m1 ;
+  rdfs:label "EMA 8 1"^^xsd:string ;
+.
+fxs:IndicatorBasedStrategy_1
+  rdf:type pip:IndicatorBasedStrategy ;
+  pip:hasSetup fxs:Setup_1 ;
+  rdfs:label "Indicator based strategy using price, EMA 8 and EMA 34 in trending market"^^xsd:string ;
+.
+fxs:PriceFastSlowPattern_1
+  rdf:type pip:PriceFastSlowPattern ;
+  pip:hasFastIndicator fxs:EMA_8_1 ;
+  pip:hasSlowIndicator fxs:EMA_34_1 ;
+  rdfs:label "Price fast slow pattern 1"^^xsd:string ;
+.
+fxs:RSIPeriodSetting_1
+  rdf:type pip:RSIPeriodSetting ;
+  pip:period 9 ;
+  rdfs:label "RSIPeriod setting 1"^^xsd:string ;
+.
+fxs:RSIThresholdCross_1
+  rdf:type pip:RSIThresholdCross ;
+  pip:hasIndicator fxs:RSI_9 ;
+  rdfs:label "RSIThreshold cross 1"^^xsd:string ;
+.
+fxs:RSI_9
+  rdf:type pip:RSI ;
+  pip:hasIndicatorSetting fxs:RSIPeriodSetting_1 ;
+  pip:hasInstrument pip:AUDJPY ;
+  pip:hasInstrument pip:AUDUSD ;
+  pip:hasInstrument pip:EURCHF ;
+  pip:hasInstrument pip:EURGBP ;
+  pip:hasInstrument pip:EURJPY ;
+  pip:hasInstrument pip:EURUSD ;
+  pip:hasInstrument pip:GBPJPY ;
+  pip:hasInstrument pip:GBPUSD ;
+  pip:hasInstrument pip:NZDUSD ;
+  pip:hasInstrument pip:USDCAD ;
+  pip:hasInstrument pip:USDCHF ;
+  pip:hasInstrument pip:USDCNH ;
+  pip:hasInstrument pip:USDJPY ;
+  pip:hasTimeFrame pip:m5 ;
+  rdfs:label "RSI 1"^^xsd:string ;
+.
+fxs:SSD_1
+  rdf:type pip:SSD ;
+.
+fxs:Setup_1
+  rdf:type pip:Setup ;
+  pip:hasEntryPolicy pip:UnanimousPolicy ;
+  pip:hasTrigger fxs:TriggerPattern_1 ;
+  pip:hasTrigger fxs:Trigger_1 ;
+  pip:hasTrigger fxs:Trigger_3 ;
+  rdfs:label "Setup 1"^^xsd:string ;
+.
+fxs:TriggerPattern_1
+  rdf:type pip:TriggerPattern ;
+  pip:hasEntryMethod pip:AgreeMethod ;
+  pip:hasSignal fxs:PriceFastSlowPattern_1 ;
+  rdfs:label "Trigger pattern 1"^^xsd:string ;
+.
+fxs:Trigger_1
+  rdf:type pip:Trigger ;
+  pip:hasEntryMethod pip:AgreeMethod ;
+  pip:hasSignal fxs:Crossover_1 ;
+  rdfs:label "Trigger 1"^^xsd:string ;
+.
+fxs:Trigger_3
+  rdf:type pip:Trigger ;
+  pip:hasEntryMethod pip:AgreeMethod ;
+  pip:hasSignal fxs:RSIThresholdCross_1 ;
+  rdfs:label "Trigger 3"^^xsd:string ;
+.
